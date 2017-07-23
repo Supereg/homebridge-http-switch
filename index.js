@@ -150,7 +150,7 @@ HTTP_SWITCH.prototype = {
 
                 callback(undefined, body);
             }
-        });
+        }.bind(this));
     },
 
     resetSwitchWithTimeout: function () {
