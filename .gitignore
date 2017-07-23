@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.npmignore
+.jshintrc
+.idea
+**/*.iml
+.DS_Store

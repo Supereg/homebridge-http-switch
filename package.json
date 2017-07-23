@@ -1,0 +1,28 @@
+{
+  "name": "homebridge-http-switch",
+  "version": "0.1.0",
+  "description": "Http Switch for Homebridge",
+  "license": "ISC",
+  "keywords": [
+    "homebridge-plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/Supereg/homebridge-http-switch.git"
+  },
+  "bugs": {
+    "url": "git@github.com:Supereg/homebridge-http-switch/issues"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "dependencies": {
+    "request": "^2.65.0"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "chai-things": "^0.2.0",
+    "hap-nodejs": "^0.4.27"
+  }
+}
