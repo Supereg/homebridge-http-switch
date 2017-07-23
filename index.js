@@ -127,27 +127,26 @@ HTTP_SWITCH.prototype = {
     },
 
     makeSetRequest: function (on, callback) {
-        var logging = this.log;
-        var resetSwitchWithTimeout = this.resetSwitchWithTimeout();
+        var httpSwitch = this;
 
         var url = on? this.onUrl: this.offUrl;
 
         this._httpRequest(url, "", this.httpMethod, function (error, response, body) {
             if (error) {
-                logging("setStatus() failed: %s", error.message);
-                resetSwitchWithTimeout();
+                httpSwitch.log("setStatus() failed: %s", error.message);
+                httpSwitch.resetSwitchWithTimeout();
 
                 callback(error);
             }
             else if (response.statusCode !== 200) {
-                logging("setStatus() http request returned http error code: %s", response.statusCode);
-                resetSwitchWithTimeout();
+                httpSwitch.log("setStatus() http request returned http error code: %s", response.statusCode);
+                httpSwitch.resetSwitchWithTimeout();
 
                 callback(new Error("Got html error code " + response.statusCode));
             }
             else {
-                logging("setStatus() successfully set switch to %s", on? "ON": "OFF");
-                resetSwitchWithTimeout();
+                httpSwitch.log("setStatus() successfully set switch to %s", on? "ON": "OFF");
+                httpSwitch.resetSwitchWithTimeout();
 
                 callback(undefined, body);
             }
