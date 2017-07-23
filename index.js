@@ -38,7 +38,7 @@ HTTP_SWITCH.prototype = {
         callback();
     },
 
-    getServies: function () {
+    getServices: function () {
         return [this.homebridgeService];
     },
 
