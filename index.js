@@ -106,7 +106,7 @@ HTTP_SWITCH.prototype = {
                 this.makeSetRequest(true, callback);
                 break;
             case "stateless-reverse":
-                if (!on) {
+                if (on) {
                     callback();
                     break;
                 }
