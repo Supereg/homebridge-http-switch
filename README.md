@@ -56,3 +56,25 @@ The default position of a Reverse Stateless Switch is on.
     ]
 
 ```
+
+## Multiple On or Off Urls
+If you wish to do so you can specify an array of urls ('onUrl' or 'offUrl') when your switch is a Stateless Switch or a Reverse Stateless Switch.
+Below you can see an example config of an Stateless Switch with three onUrls.
+
+
+```
+    "accessories": [
+        {
+          "accessory": "HTTP-SWITCH",
+          "name": "Switch 1",
+          
+          "switchType": "stateless",
+          "onUrl": [
+            "http://localhost/api/switch1On",
+            "http://localhost/api/switch2On",
+            "http://localhost/api/switch3On"
+          ]
+        }   
+    ]
+
+```

@@ -17,8 +17,26 @@ function HTTP_SWITCH(log, config) {
     this.switchType = config.switchType || 'stateful';
 
     this.httpMethod = config.httpMethod || "GET";
-    this.onUrl = config.onUrl;
-    this.offUrl = config.offUrl;
+
+    this.onUrl = [];
+    this.offUrl = [];
+
+    if (!!config.onUrl && config.onUrl.constructor === Array) {
+        this.onUrl = config.onUrl;
+    }
+    else if (config.onUrl) {
+        this.onUrl = [config.onUrl];
+    }
+
+    if (!!config.offUrl && config.offUrl.constructor === Array) {
+        this.offUrl = config.offUrl;
+    }
+    else if (config.offUrl) {
+        this.offUrl = [config.offUrl];
+    }
+
+    /*this.onUrl = config.onUrl;
+    this.offUrl = config.offUrl;*/
 
     this.statusUrl = config.statusUrl;
 
@@ -83,12 +101,6 @@ HTTP_SWITCH.prototype = {
     setStatus: function (on, callback) {
         switch (this.switchType) {
             case "stateful":
-                if (!this.onUrl || !this.offUrl) {
-                    this.log.warn("Ignoring setStatus() request, 'onUrl' or 'offUrl' is not defined");
-                    callback(new Error("No 'onUrl' or 'offUrl' defined!"));
-                    break;
-                }
-
                 this.makeSetRequest(on, callback);
                 break;
             case "stateless":
@@ -97,23 +109,11 @@ HTTP_SWITCH.prototype = {
                     break;
                 }
 
-                if (!this.onUrl) {
-                    this.log.warn("Ignoring setStatus() request, 'onUrl' is not defined");
-                    callback(new Error("No 'onUrl' defined!"));
-                    break;
-                }
-
                 this.makeSetRequest(true, callback);
                 break;
             case "stateless-reverse":
                 if (on) {
                     callback();
-                    break;
-                }
-
-                if (!this.offUrl) {
-                    this.log.warn("Ignoring setStatus() request, 'offUrl' is not defined");
-                    callback(new Error("No 'offUrl' defined!"));
                     break;
                 }
 
@@ -129,28 +129,52 @@ HTTP_SWITCH.prototype = {
     makeSetRequest: function (on, callback) {
         var httpSwitch = this;
 
-        var url = on? this.onUrl: this.offUrl;
+        var urlArray = on? this.onUrl: this.offUrl;
 
-        this._httpRequest(url, "", this.httpMethod, function (error, response, body) {
-            if (error) {
-                httpSwitch.log("setStatus() failed: %s", error.message);
-                httpSwitch.resetSwitchWithTimeout();
+        if (urlArray.length === 0) {
+            this.log("Ignoring setStatus() request 'offUrl' or 'onUrl' is not defined");
+            callback(new Error("No 'onUrl' or 'offUrl' defined!"));
+            return;
+        }
 
-                callback(error);
-            }
-            else if (response.statusCode !== 200) {
-                httpSwitch.log("setStatus() http request returned http error code: %s", response.statusCode);
-                httpSwitch.resetSwitchWithTimeout();
+        if (this.switchType === "stateful" && urlArray.length !== 1) {
+            this.log("Stateful switch cannot have multiple on/off urls");
+            callback(new Error("Confused with urls"));
+            return;
+        }
 
-                callback(new Error("Got html error code " + response.statusCode));
-            }
-            else {
-                httpSwitch.log("setStatus() successfully set switch to %s", on? "ON": "OFF");
-                httpSwitch.resetSwitchWithTimeout();
+        var lastIndex = urlArray.length - 1;
+        for (var i = 0; i < urlArray.length; i++) {
+            var url = urlArray[i];
 
-                callback(undefined, body);
-            }
-        }.bind(this));
+            const iCopy = i;
+            this._httpRequest(url, "", this.httpMethod, function (error, response, body) {
+                if (error) {
+                    httpSwitch.log("setStatus() failed: %s", error.message);
+                    httpSwitch.resetSwitchWithTimeout();
+
+                    if (iCopy === lastIndex) {
+                        callback(error);
+                    }
+                }
+                else if (response.statusCode !== 200) {
+                    httpSwitch.log("setStatus() http request returned http error code: %s", response.statusCode);
+                    httpSwitch.resetSwitchWithTimeout();
+
+                    if (iCopy === lastIndex) {
+                        callback(new Error("Got html error code " + response.statusCode));
+                    }
+                }
+                else {
+                    httpSwitch.log("setStatus() successfully set switch to %s", on? "ON": "OFF");
+                    httpSwitch.resetSwitchWithTimeout();
+
+                    if (iCopy === lastIndex) {
+                        callback(undefined, body);
+                    }
+                }
+            }.bind(this));
+        }
     },
 
     resetSwitchWithTimeout: function () {
