@@ -36,9 +36,6 @@ function HTTP_SWITCH(log, config) {
         this.offUrl = [config.offUrl];
     }
 
-    /*this.onUrl = config.onUrl;
-    this.offUrl = config.offUrl;*/
-
     this.statusUrl = config.statusUrl;
 
     this.homebridgeService = new Service.Switch(this.name);
@@ -58,7 +55,15 @@ HTTP_SWITCH.prototype = {
     },
 
     getServices: function () {
-        return [this.homebridgeService];
+        const informationService = new Service.AccessoryInformation();
+
+        informationService
+            .setCharacteristic(Characteristic.Manufacturer, "Andreas Bauer")
+            .setCharacteristic(Characteristic.Model, "HTTP Switch")
+            .setCharacteristic(Characteristic.SerialNumber, "SW01")
+            .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+
+        return [informationService, this.homebridgeService];
     },
 
     getStatus: function (callback) {
