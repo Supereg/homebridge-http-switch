@@ -2,6 +2,7 @@
 
 let Service, Characteristic;
 const request = require("request");
+const async = require("async");
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -127,7 +128,7 @@ HTTP_SWITCH.prototype = {
     },
 
     makeSetRequest: function (on, callback) {
-        const httpSwitch = this;
+        const that = this;
 
         const urlArray = on ? this.onUrl : this.offUrl;
 
@@ -143,38 +144,58 @@ HTTP_SWITCH.prototype = {
             return;
         }
 
-        const lastIndex = urlArray.length - 1;
+        const functionArray = new Array(urlArray.length);
         for (let i = 0; i < urlArray.length; i++) {
             const url = urlArray[i];
 
-            const iCopy = i;
-            this._httpRequest(url, "", this.httpMethod, function (error, response, body) {
-                if (error) {
-                    httpSwitch.log("setStatus() failed: %s", error.message);
-                    httpSwitch.resetSwitchWithTimeout();
-
-                    if (iCopy === lastIndex) {
+            functionArray[i] = function (callback) {
+                that._httpRequest(url, "", that.httpMethod, function (error, response, body) {
+                    if (error) {
+                        that.log("setStatus()[" + (i + 1) + "] failed: %s", error.message);
                         callback(error);
                     }
-                }
-                else if (response.statusCode !== 200) {
-                    httpSwitch.log("setStatus() http request returned http error code: %s", response.statusCode);
-                    httpSwitch.resetSwitchWithTimeout();
-
-                    if (iCopy === lastIndex) {
+                    else if (response.statusCode !== 200) {
+                        that.log("setStatus()[" + (i + 1) + "] http request returned http error code: %s", response.statusCode);
                         callback(new Error("Got html error code " + response.statusCode));
                     }
-                }
-                else {
-                    httpSwitch.log("setStatus() successfully set switch to %s", on? "ON": "OFF");
-                    httpSwitch.resetSwitchWithTimeout();
-
-                    if (iCopy === lastIndex) {
+                    else {
+                        that.log("setStatus()[" + (i + 1) + "] successfully set switch to %s", on? "ON": "OFF");
                         callback(undefined, body);
                     }
-                }
-            }.bind(this));
+                }.bind(this));
+            }
         }
+
+        async.parallel(functionArray, function (errors, results) {
+            that.resetSwitchWithTimeout();
+
+            if (functionArray.length === 1) {
+                callback(errors, results);
+            }
+            else {
+                let errors = 0;
+                let errorMessage = " errors occurred when calling multiple urls: {";
+
+                for (let i = 0; i < errors.length; i++) {
+                    const error = errors[i];
+
+                    if (error instanceof Error) {
+                        errors++;
+                        errorMessage += "\"" + error.message + "\", ";
+                    }
+                }
+
+                errorMessage = errors + errorMessage.substring(0, errorMessage.length - 2) + "}";
+
+                if (errors > 0) {
+                    callback(new Error(errorMessage.format()));
+                    that.log(errorMessage);
+                }
+                else {
+                    callback(undefined, "");
+                }
+            }
+        });
     },
 
     resetSwitchWithTimeout: function () {
