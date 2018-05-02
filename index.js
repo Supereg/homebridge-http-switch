@@ -1,7 +1,7 @@
 "use strict";
 
-var Service, Characteristic;
-var request = require("request");
+let Service, Characteristic;
+const request = require("request");
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -79,7 +79,7 @@ HTTP_SWITCH.prototype = {
                         callback(new Error("Got html error code " + response.statusCode));
                     }
                     else {
-                        var switchedOn = parseInt(body) > 0;
+                        const switchedOn = parseInt(body) > 0;
                         this.log("Switch is currently %s", switchedOn? "ON": "OFF");
                         callback(null, switchedOn);
                     }
@@ -127,9 +127,9 @@ HTTP_SWITCH.prototype = {
     },
 
     makeSetRequest: function (on, callback) {
-        var httpSwitch = this;
+        const httpSwitch = this;
 
-        var urlArray = on? this.onUrl: this.offUrl;
+        const urlArray = on ? this.onUrl : this.offUrl;
 
         if (urlArray.length === 0) {
             this.log("Ignoring setStatus() request 'offUrl' or 'onUrl' is not defined");
@@ -143,9 +143,9 @@ HTTP_SWITCH.prototype = {
             return;
         }
 
-        var lastIndex = urlArray.length - 1;
-        for (var i = 0; i < urlArray.length; i++) {
-            var url = urlArray[i];
+        const lastIndex = urlArray.length - 1;
+        for (let i = 0; i < urlArray.length; i++) {
+            const url = urlArray[i];
 
             const iCopy = i;
             this._httpRequest(url, "", this.httpMethod, function (error, response, body) {
