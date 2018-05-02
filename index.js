@@ -61,7 +61,7 @@ HTTP_SWITCH.prototype = {
             .setCharacteristic(Characteristic.Manufacturer, "Andreas Bauer")
             .setCharacteristic(Characteristic.Model, "HTTP Switch")
             .setCharacteristic(Characteristic.SerialNumber, "SW01")
-            .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+            .setCharacteristic(Characteristic.FirmwareRevision, "0.3.0");
 
         return [informationService, this.homebridgeService];
     },
