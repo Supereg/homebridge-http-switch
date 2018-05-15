@@ -3,6 +3,7 @@
 let Service, Characteristic;
 const request = require("request");
 const async = require("async");
+const packageJSON = require('./package.json');
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -61,7 +62,7 @@ HTTP_SWITCH.prototype = {
             .setCharacteristic(Characteristic.Manufacturer, "Andreas Bauer")
             .setCharacteristic(Characteristic.Model, "HTTP Switch")
             .setCharacteristic(Characteristic.SerialNumber, "SW01")
-            .setCharacteristic(Characteristic.FirmwareRevision, "0.3.1");
+            .setCharacteristic(Characteristic.FirmwareRevision, packageJSON.version);
 
         return [informationService, this.homebridgeService];
     },
