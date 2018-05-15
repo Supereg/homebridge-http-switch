@@ -33,6 +33,9 @@ A Stateless Switch remains in only one state. If you switch it to on, it goes im
           "name": "Switch 1",
           
           "switchType": "stateless", // default is 'stateful'
+          
+          "timeout": 1000, // <optional> set the timeout after which the switch returns to its original state in milliseconds; default is 1000
+          
           "onUrl": "http://localhost/api/switchOn"
           // only possible state, so neither 'offUrl' nor 'statusUrl' needs to be defined
         }   
@@ -51,6 +54,9 @@ The default position of a Reverse Stateless Switch is on.
           "name": "Switch",
           
           "switchType": "stateless-reverse",
+          
+          "timeout": 1000, // <optional> set the timeout after which the switch returns to its original state in milliseconds; default is 1000
+          
           "offUrl": "http://localhost/api/switchOff"
         }   
     ]

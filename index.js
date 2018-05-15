@@ -17,6 +17,10 @@ function HTTP_SWITCH(log, config) {
     this.name = config.name;
 
     this.switchType = config.switchType || 'stateful';
+    this.timeout = config.timeout || 1000;
+    if (typeof timeout !== 'number') {
+        this.timeout = 1000;
+    }
 
     this.httpMethod = config.httpMethod || "GET";
 
@@ -205,20 +209,22 @@ HTTP_SWITCH.prototype = {
     },
 
     resetSwitchWithTimeout: function () {
+        const that = this;
+
         switch (this.switchType) {
             case "stateless":
                 this.log("Resetting switch to OFF");
 
                 setTimeout(function () {
                     this.homebridgeService.setCharacteristic(Characteristic.On, false);
-                }.bind(this), 1000);
+                }.bind(this), that.timeout);
                 break;
             case "stateless-reverse":
                 this.log("Resetting switch to ON");
 
                 setTimeout(function () {
                     this.homebridgeService.setCharacteristic(Characteristic.On, true);
-                }.bind(this), 1000);
+                }.bind(this), that.timeout);
                 break;
         }
     },
