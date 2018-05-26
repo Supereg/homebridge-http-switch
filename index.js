@@ -103,6 +103,8 @@ HTTP_SWITCH.prototype = {
         }
 
         this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
+
+        this.ignoreNextSet = true;
         this.homebridgeService.setCharacteristic(characteristic, value);
     },
 
@@ -145,6 +147,9 @@ HTTP_SWITCH.prototype = {
     },
 
     setStatus: function (on, callback) {
+        if (this.ignoreNextSet)
+            return;
+
         switch (this.switchType) {
             case "stateful":
                 this.makeSetRequest(on, callback);
