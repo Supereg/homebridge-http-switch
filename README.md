@@ -1,53 +1,67 @@
 
 # "homebridge-http-switch" Plugin
 
-Configuration:
+With this plugin you can create HomeKit switches which will contact your http API Server to control your accessories. This 
+is handy if already have home automated equipment which only exposes an http server. Or you simply want to manage your 
+accessories in another program.
 
-```
+## Configuration:
+
+```json
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
           "name": "Switch",
           
-          "httpMethod": "POST", // optional, defaults to 'GET'
+          "switchType": "stateful",
+          
+          "httpMethod": "POST",
           "onUrl": "http://localhost/api/switchOn",
           "offUrl": "http://localhost/api/switchOff",
           
-          "statusUrl": "http://localhost/api/switchStatus" // GET request
+          "statusUrl": "http://localhost/api/switchStatus"
         }   
     ]
-
 ```
-With this plugin you can create switches which will contact your http API Server to control your Equipment. This is handy if you want to make use of homebridge but can't create plugins in NodeJS or want to use a somehow better language to control your devices/switch.
 
-The statusUrl route has to return 0 for off and 1 for on without any html markup.
+* `switchType` is **optional**, default is 'stateful'. This property defines the type of the switch:
+    * `stateful`: A normal switch and thus the default value
+    * `stateless`: A stateless switch remains in only one state. If you switch it to on, it immediately goes back to off. 
+    Configuration example is further down.
+    * `stateless-reverse`: Default position is ON. If you switch it off, it immediately gies back to on. Configuration 
+    example is further down.
+* `httpMethod` is **optional**, default is 'GET*' This defines the httpMethod which is used for the `onUrl`and `offUrl`
+ requests
+* `onUrl` is the http url which is called when you turn on the switch (**required**)
+* `offUrl` is the http url which is called when you turn off the switch (**required**)
+* `statusUrl` is the http url which is called to retrieve the current state of the switch. It is an **GET** request and 
+expects to return 0 for OFF or 1 for ON without any html markup.
 
 ## Stateless Switch
 
-A Stateless Switch remains in only one state. If you switch it to on, it goes immediately back to off. Thus there is no need declaring a 'offUrl' or a 'statusUrl' in the configuration
-
-```
+```json
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
-          "name": "Switch 1",
+          "name": "Switch",
           
-          "switchType": "stateless", // default is 'stateful'
+          "switchType": "stateless",
           
-          "timeout": 1000, // <optional> set the timeout after which the switch returns to its original state in milliseconds; default is 1000
+          "timeout": 1000,
           
           "onUrl": "http://localhost/api/switchOn"
-          // only possible state, so neither 'offUrl' nor 'statusUrl' needs to be defined
         }   
     ]
-
 ```
+
+* `timeout`: is **optional**, default is '1000'. This property sets the timeout after which the switch returns to its 
+originals state in milliseconds
+
+Since **OFF** is the only possible state you do not need to declare `offUrl` or a `statusUrl`
 
 ## Reverse Stateless Switch
 
-The default position of a Reverse Stateless Switch is on.
-
-```
+```json
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
@@ -55,24 +69,29 @@ The default position of a Reverse Stateless Switch is on.
           
           "switchType": "stateless-reverse",
           
-          "timeout": 1000, // <optional> set the timeout after which the switch returns to its original state in milliseconds; default is 1000
+          "timeout": 1000,
           
           "offUrl": "http://localhost/api/switchOff"
         }   
     ]
-
 ```
+
+* `timeout`: is **optional**, default is '1000'. This property sets the timeout after which the switch returns to its 
+originals state in milliseconds
+
+Since **ON** is the only possible state you do not need to declare `onUrl` or a `statusUrl`
 
 ## Multiple On or Off Urls
-If you wish to do so you can specify an array of urls ('onUrl' or 'offUrl') when your switch is a Stateless Switch or a Reverse Stateless Switch.
-Below you can see an example config of an Stateless Switch with three onUrls.
+If you wish to do so you can specify an array of urls (`onUrl` or `offUrl`) when your switch is a **stateless switch** 
+or a **reverse-stateless switch**. This is not possible with a normal stateful switch.
 
+Below you can see an example config of an stateless switch with three urls.
 
-```
+```json
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
-          "name": "Switch 1",
+          "name": "Switch",
           
           "switchType": "stateless",
           "onUrl": [
@@ -82,5 +101,4 @@ Below you can see an example config of an Stateless Switch with three onUrls.
           ]
         }   
     ]
-
 ```
