@@ -115,7 +115,7 @@ Below you can see an example config of an stateless switch with three urls.
 
 `homebridge-http-switch` can be used together with 
 [homebridge-http-notification-server](https://github.com/Supereg/homebridge-http-notification-server) in order to receive
-updates when the state changes at your external program. For detauls on ow to implement those updates and how to 
+updates when the state changes at your external program. For details on how to implement those updates and how to 
 install and configure `homebridge-http-notification-server`, please refer to the 
 [README](https://github.com/Supereg/homebridge-http-notification-server) of the repository.
 
