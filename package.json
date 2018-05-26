@@ -8,10 +8,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com/Supereg/homebridge-http-switch.git"
+    "url": "https://github.com/Supereg/homebridge-http-switch"
   },
   "bugs": {
-    "url": "git@github.com:Supereg/homebridge-http-switch/issues"
+    "url": "https://github.com/Supereg/homebridge-http-switch/issues"
   },
   "engines": {
     "node": ">=0.12.0",
