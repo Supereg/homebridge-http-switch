@@ -147,8 +147,10 @@ HTTP_SWITCH.prototype = {
     },
 
     setStatus: function (on, callback) {
-        if (this.ignoreNextSet)
+        if (this.ignoreNextSet) {
+            callback();
             return;
+        }
 
         switch (this.switchType) {
             case "stateful":
