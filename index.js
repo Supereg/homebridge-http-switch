@@ -58,8 +58,12 @@ function HTTP_SWITCH(log, config) {
 
     api.on('didFinishLaunching', function() {
         if (api.notificationRegistration && typeof api.notificationRegistration === "function") {
-            api.notificationRegistration(this.notificationID, this.handleNotification.bind(this), this.notificationPassword);
-            this.log("Detected running notification server.");
+            try {
+                api.notificationRegistration(this.notificationID, this.handleNotification.bind(this), this.notificationPassword);
+                this.log("Detected running notification server. Registered successfully!");
+            } catch (error) {
+                this.log("Could not register notification handler. ID '" + this.notificationID + "' is already taken!")
+            }
         }
     }.bind(this));
 }
