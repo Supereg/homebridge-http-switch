@@ -8,6 +8,7 @@ accessories in another program.
 ## Configuration:
 
 ```json
+{
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
@@ -22,6 +23,7 @@ accessories in another program.
           "statusUrl": "http://localhost/api/switchStatus"
         }   
     ]
+}
 ```
 
 * `switchType` is **optional**, default is 'stateful'. This property defines the type of the switch:
@@ -40,6 +42,7 @@ expects to return 0 for OFF or 1 for ON without any html markup.
 ## Stateless Switch
 
 ```json
+{
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
@@ -52,6 +55,7 @@ expects to return 0 for OFF or 1 for ON without any html markup.
           "onUrl": "http://localhost/api/switchOn"
         }   
     ]
+}  
 ```
 
 * `timeout`: is **optional**, default is '1000'. This property sets the timeout after which the switch returns to its 
@@ -62,6 +66,7 @@ Since **OFF** is the only possible state you do not need to declare `offUrl` or 
 ## Reverse Stateless Switch
 
 ```json
+{
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
@@ -74,6 +79,7 @@ Since **OFF** is the only possible state you do not need to declare `offUrl` or 
           "offUrl": "http://localhost/api/switchOff"
         }   
     ]
+}
 ```
 
 * `timeout`: is **optional**, default is '1000'. This property sets the timeout after which the switch returns to its 
@@ -88,6 +94,7 @@ or a **reverse-stateless switch**. This is not possible with a normal stateful s
 Below you can see an example config of an stateless switch with three urls.
 
 ```json
+{
     "accessories": [
         {
           "accessory": "HTTP-SWITCH",
@@ -101,4 +108,41 @@ Below you can see an example config of an stateless switch with three urls.
           ]
         }   
     ]
+}
 ```
+
+## Notification Server
+
+`homebridge-http-switch` can be used together with 
+[homebridge-http-notification-server](https://github.com/Supereg/homebridge-http-notification-server) in order to receive
+updates when the state changes at your external program. For detauls on ow to implement those updates and how to 
+install and configure `homebridge-http-notification-server`, please refer to the 
+[README](https://github.com/Supereg/homebridge-http-notification-server) of the repository.
+
+Down here is an example on how to configure `homebridge-http-switch` to work with your implementation of the 
+`homebridge-http-notification-server`.
+
+```json
+{
+    "accessories": [
+        {
+          "accessory": "HTTP-SWITCH",
+          "name": "Switch",
+          
+          "notificationID": "my-switch",
+          "notificationPassword": "superSecretPassword",
+          
+          "onUrl": "http://localhost/api/switchOn",
+          "offUrl": "http://localhost/api/switchOff",
+          
+          "statusUrl": "http://localhost/api/switchStatus"
+        }   
+    ]
+}
+```
+
+* `notificationID` is an per Homebridge instance unique id which must be included in any http request.  
+* `notificationPassword` is **optional**. It can be used to secure any incoming requests.
+
+To get more details about the configuration have a look at the 
+[README](https://github.com/Supereg/homebridge-http-notification-server).

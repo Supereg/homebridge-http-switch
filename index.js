@@ -1,6 +1,6 @@
 "use strict";
 
-let Service, Characteristic;
+let Service, Characteristic, api;
 const request = require("request");
 const async = require("async");
 const packageJSON = require('./package.json');
@@ -8,6 +8,8 @@ const packageJSON = require('./package.json');
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
+
+    api = homebridge;
 
     homebridge.registerAccessory("homebridge-http-switch", "HTTP-SWITCH", HTTP_SWITCH);
 };
@@ -50,6 +52,16 @@ function HTTP_SWITCH(log, config) {
 
     if (this.switchType === "stateless-reverse")
         this.homebridgeService.setCharacteristic(Characteristic.On, true);
+
+    this.notificationID = config.notificationID || this.name.toLowerCase().replace(" ", "-");
+    this.notificationPassword = config.notificationPassword;
+
+    api.on('didFinishLaunching', function() {
+        if (api.notificationRegistration && typeof api.notificationRegistration === "function") {
+            api.notificationRegistration(this.notificationID, this.handleNotification.bind(this), this.notificationPassword);
+            this.log("Detected running notification server.");
+        }
+    }.bind(this));
 }
 
 HTTP_SWITCH.prototype = {
@@ -69,6 +81,23 @@ HTTP_SWITCH.prototype = {
             .setCharacteristic(Characteristic.FirmwareRevision, packageJSON.version);
 
         return [informationService, this.homebridgeService];
+    },
+
+    handleNotification: function(body) {
+        const value = body.value;
+
+        let characteristic;
+        switch (body.characteristic) {
+            case "On":
+                characteristic = Characteristic.On;
+                break;
+            default:
+                this.log("Encountered unknown characteristic handling notification: " + body.characteristic);
+                return;
+        }
+
+        this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
+        this.homebridgeService.setCharacteristic(characteristic, value);
     },
 
     getStatus: function (callback) {
