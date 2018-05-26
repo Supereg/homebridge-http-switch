@@ -148,7 +148,8 @@ HTTP_SWITCH.prototype = {
 
     setStatus: function (on, callback) {
         if (this.ignoreNextSet) {
-            callback();
+            this.ignoreNextSet = false;
+            callback(undefined, "");
             return;
         }
 
