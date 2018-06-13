@@ -146,3 +146,9 @@ Down here is an example on how to configure `homebridge-http-switch` to work wit
 
 To get more details about the configuration have a look at the 
 [README](https://github.com/Supereg/homebridge-http-notification-server).
+
+**Available characteristics (for the POST body)**
+
+Down here are all characteristics listed which can be updated with an request to the `homebridge-http-notification-server`
+
+* `characteristic` "On": expects a boolean `value`
