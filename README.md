@@ -1,9 +1,20 @@
 
-# "homebridge-http-switch" Plugin
+# homebridge-http-switch Plugin
 
-With this plugin you can create HomeKit switches which will contact your http API Server to control your accessories. This 
-is handy if already have home automated equipment which only exposes an http server. Or you simply want to manage your 
-accessories in another program.
+`homebridge-http-switch` is a [Homebridge](https://github.com/nfarina/homebridge) plugin with which you can configure 
+HomeKit switches which forward any requests to a defined http server. This comes in handy when you already have home 
+automated equipment which can be controlled via http requests. Or you have built your own equipment, for example some sort 
+of lightning controlled with an wifi enabled Arduino board which than can be integrated via this plugin into Homebridge.
+
+`homebridge-http-switch` supports three different type of switches. A normal `stateful` switch and two variants of 
+_stateless_ switches (`stateless` and `stateless-reverse`) which differ in their original position. For stateless switches 
+you can specify multiple urls to be targeted when the switch is turned On/Off.   
+More about on how to configure such switches can be read further down.
+
+The _'On'_ characteristic from the _'switch'_ service has the permission to `notify` the HomeKit controller of state 
+changes. `homebridge-http-switch` is able to receive such notifications and forwards them to the HomeKit controller. 
+State changes happening on the http device can then be instantly reflected for example in the Home App.  
+How to implement the protocol into your http device can be read in the chapter [**Notification Server**](#notification-server)
 
 ## Configuration:
 
@@ -16,7 +27,7 @@ accessories in another program.
           
           "switchType": "stateful",
           
-          "httpMethod": "POST",
+          "httpMethod": "GET",
           "onUrl": "http://localhost/api/switchOn",
           "offUrl": "http://localhost/api/switchOff",
           
@@ -26,18 +37,18 @@ accessories in another program.
 }
 ```
 
-* `switchType` is **optional**, default is 'stateful'. This property defines the type of the switch:
+* `switchType` is **optional**, default is 'stateful'. The property defines the type of the switch:
     * `stateful`: A normal switch and thus the default value
     * `stateless`: A stateless switch remains in only one state. If you switch it to on, it immediately goes back to off. 
     Configuration example is further down.
     * `stateless-reverse`: Default position is ON. If you switch it off, it immediately gies back to on. Configuration 
     example is further down.
-* `httpMethod` is **optional**, default is 'GET*' This defines the httpMethod which is used for the `onUrl`and `offUrl`
+* `httpMethod` is **optional**, default is 'GET'. It defines the httpMethod which is used for the `onUrl`and `offUrl`
  requests
 * `onUrl` is the http url which is called when you turn on the switch (**required**)
 * `offUrl` is the http url which is called when you turn off the switch (**required**)
 * `statusUrl` is the http url which is called to retrieve the current state of the switch. It is an **GET** request and 
-expects to return 0 for OFF or 1 for ON without any html markup.
+expects to return 0 for OFF or 1 for ON without any html markup (**required**)
 
 ## Stateless Switch
 
