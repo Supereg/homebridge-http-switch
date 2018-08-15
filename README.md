@@ -34,8 +34,8 @@ How to implement the protocol into your http device can be read in the chapter [
           "statusUrl": "http://localhost/api/switchStatus",
           
           "auth": {
-            "username": "username",
-            "password": "password"
+            "username": "yourUsername",
+            "password": "yourPassword"
           }
         }   
     ]
