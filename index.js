@@ -49,6 +49,7 @@ function HTTP_SWITCH(log, config) {
         if (!(config.auth.username && config.auth.password))
             this.log("Authentication parameters are not set completely. Username or password is missing!");
         else {
+            this.auth = {};
             this.auth.username = config.auth.username;
             this.auth.password = config.auth.password;
         }
