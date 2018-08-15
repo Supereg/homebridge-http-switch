@@ -285,7 +285,7 @@ HTTP_SWITCH.prototype = {
     _httpRequest: function (url, body, method, callback) {
         let auth = undefined;
 
-        if (this.auth.username && this.auth.password) {
+        if (this.auth && this.auth.username && this.auth.password) {
             auth = {};
             auth.username = this.auth.username;
             auth.password = this.auth.password;
