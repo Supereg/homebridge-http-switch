@@ -31,7 +31,12 @@ How to implement the protocol into your http device can be read in the chapter [
           "onUrl": "http://localhost/api/switchOn",
           "offUrl": "http://localhost/api/switchOff",
           
-          "statusUrl": "http://localhost/api/switchStatus"
+          "statusUrl": "http://localhost/api/switchStatus",
+          
+          "auth": {
+            "username": "username",
+            "password": "password"
+          }
         }   
     ]
 }
@@ -49,6 +54,9 @@ How to implement the protocol into your http device can be read in the chapter [
 * `offUrl` is the http url which is called when you turn off the switch (**required**)
 * `statusUrl` is the http url which is called to retrieve the current state of the switch. It is an **GET** request and 
 expects to return 0 for OFF or 1 for ON without any html markup (**required**)
+* `auth`: if your http server expects basic authentication you can set `username` and `password` in the `auth` object 
+which is then used for any given url. If you just ned authentication for one specific url you still need to use the 
+following pattern: `http://username:password@example.com`
 
 ## Stateless Switch
 

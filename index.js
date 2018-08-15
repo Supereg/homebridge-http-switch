@@ -45,6 +45,15 @@ function HTTP_SWITCH(log, config) {
 
     this.statusUrl = config.statusUrl;
 
+    if (config.auth) {
+        if (!(config.auth.username && config.auth.password))
+            this.log("Authentication parameters are not set completely. Username or password is missing!");
+        else {
+            this.auth.username = config.auth.username;
+            this.auth.password = config.auth.password;
+        }
+    }
+
     this.homebridgeService = new Service.Switch(this.name);
     this.homebridgeService.getCharacteristic(Characteristic.On)
         .on("get", this.getStatus.bind(this))
@@ -273,12 +282,21 @@ HTTP_SWITCH.prototype = {
     },
 
     _httpRequest: function (url, body, method, callback) {
+        let auth = undefined;
+
+        if (this.auth.username && this.auth.password) {
+            auth = {};
+            auth.username = this.auth.username;
+            auth.password = this.auth.password;
+        }
+
         request(
             {
                 url: url,
                 body: body,
                 method: method,
-                rejectUnauthorized: false
+                rejectUnauthorized: false,
+                auth: auth
             },
             function (error, response, body) {
                 callback(error, response, body);
