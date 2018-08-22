@@ -18,6 +18,8 @@ function HTTP_SWITCH(log, config) {
     this.log = log;
     this.name = config.name;
 
+    this.debug = config.debug || false;
+
     this.switchType = config.switchType || 'stateful';
     this.timeout = config.timeout || 1000;
     if (typeof timeout !== 'number') {
@@ -112,7 +114,8 @@ HTTP_SWITCH.prototype = {
                 return;
         }
 
-        this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
+        if (this.debug)
+            this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
 
         this.ignoreNextSet = true;
         this.homebridgeService.setCharacteristic(characteristic, value);
@@ -137,6 +140,9 @@ HTTP_SWITCH.prototype = {
                         callback(new Error("Got html error code " + response.statusCode));
                     }
                     else {
+                        if (this.debug)
+                            this.log(`Body of status response is: '${body}'`);
+
                         const switchedOn = parseInt(body) > 0;
                         this.log("Switch is currently %s", switchedOn? "ON": "OFF");
                         callback(null, switchedOn);

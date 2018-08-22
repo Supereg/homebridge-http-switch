@@ -36,7 +36,9 @@ How to implement the protocol into your http device can be read in the chapter [
           "auth": {
             "username": "yourUsername",
             "password": "yourPassword"
-          }
+          },
+          
+          "debug": false
         }   
     ]
 }
@@ -57,6 +59,7 @@ expects to return 0 for OFF or 1 for ON without any html markup (**required**)
 * `auth`: if your http server expects basic authentication you can set `username` and `password` in the `auth` object 
 which is then used for any given url. If you just ned authentication for one specific url you still need to use the 
 following pattern: `http://username:password@example.com`
+* `debug` is **optional**, default is 'false'. If enabled the plugin prints more detailed debug information
 
 ## Stateless Switch
 
