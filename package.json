@@ -18,12 +18,12 @@
     "homebridge": ">=0.4.0"
   },
   "dependencies": {
-    "request": "^2.87.0",
+    "request": "^2.88.0",
     "async": "^2.6.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",
     "chai-things": "^0.2.0",
-    "hap-nodejs": "^0.4.41"
+    "hap-nodejs": "^0.4.47"
   }
 }
