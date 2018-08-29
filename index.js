@@ -172,7 +172,7 @@ HTTP_SWITCH.prototype = {
     setStatus: function (on, callback) {
         if (this.ignoreNextSet) {
             this.ignoreNextSet = false;
-            callback(undefined, "");
+            callback();
             return;
         }
 
@@ -236,7 +236,7 @@ HTTP_SWITCH.prototype = {
                     }
                     else {
                         that.log("setStatus()[" + (i + 1) + "] successfully set switch to %s", on? "ON": "OFF");
-                        callback(undefined, body);
+                        callback(null, body);
                     }
                 }.bind(this));
             }
@@ -268,7 +268,7 @@ HTTP_SWITCH.prototype = {
                     that.log(errorMessage);
                 }
                 else {
-                    callback(undefined, "");
+                    callback();
                 }
             }
         });
