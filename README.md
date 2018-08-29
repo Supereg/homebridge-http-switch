@@ -11,6 +11,16 @@ _stateless_ switches (`stateless` and `stateless-reverse`) which differ in their
 you can specify multiple urls to be targeted when the switch is turned On/Off.   
 More about on how to configure such switches can be read further down.
 
+## Installation
+
+First of all you need to have [Homebridge](https://github.com/nfarina/homebridge) installed. Refer to the repo for 
+instructions.  
+Then run the following command to install `homebridge-http-switch`
+
+```
+sudo npm install -g homebridge-http-switch
+```
+
 ## Updating the switch state in HomeKit
 
 The _'On'_ characteristic from the _'switch'_ service has the permission to `notify` the HomeKit controller of state 
