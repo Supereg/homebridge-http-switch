@@ -14,13 +14,21 @@ module.exports = function (homebridge) {
     homebridge.registerAccessory("homebridge-http-switch", "HTTP-SWITCH", HTTP_SWITCH);
 };
 
+const SwitchType = Object.freeze({
+    STATEFUL: "stateful",
+    STATELESS: "stateless",
+    STATELESS_REVERSE: "stateless-reverse"
+});
+
 function HTTP_SWITCH(log, config) {
     this.log = log;
     this.name = config.name;
 
     this.debug = config.debug || false;
 
-    this.switchType = config.switchType || 'stateful';
+    this.switchType = config.switchType || SwitchType.STATEFUL;
+    this.switchType.toLowerCase();
+
     this.timeout = config.timeout || 1000;
     if (typeof this.timeout !== 'number') {
         this.timeout = 1000;
@@ -62,7 +70,7 @@ function HTTP_SWITCH(log, config) {
         .on("get", this.getStatus.bind(this))
         .on("set", this.setStatus.bind(this));
 
-    if (this.switchType === "stateless-reverse")
+    if (this.switchType === SwitchType.STATELESS_REVERSE)
         this.homebridgeService.setCharacteristic(Characteristic.On, true);
 
     this.notificationID = config.notificationID;
@@ -123,7 +131,7 @@ HTTP_SWITCH.prototype = {
 
     getStatus: function (callback) {
         switch (this.switchType) {
-            case "stateful":
+            case SwitchType.STATEFUL:
                 if (!this.statusUrl) {
                     this.log.warn("Ignoring getStatus() request, 'statusUrl' is not defined");
                     callback(new Error("No 'statusUrl' url defined!"));
@@ -149,13 +157,12 @@ HTTP_SWITCH.prototype = {
                     }
                 }.bind(this));
                 break;
-            case "stateless":
+            case SwitchType.STATELESS:
                 callback(null, false);
                 break;
-            case "stateless-reverse":
+            case SwitchType.STATELESS_REVERSE:
                 callback(null, true);
                 break;
-
             default:
                 callback(null, false);
                 break;
@@ -170,10 +177,10 @@ HTTP_SWITCH.prototype = {
         }
 
         switch (this.switchType) {
-            case "stateful":
+            case SwitchType.STATEFUL:
                 this.makeSetRequest(on, callback);
                 break;
-            case "stateless":
+            case SwitchType.STATELESS:
                 if (!on) {
                     callback();
                     break;
@@ -181,7 +188,7 @@ HTTP_SWITCH.prototype = {
 
                 this.makeSetRequest(true, callback);
                 break;
-            case "stateless-reverse":
+            case SwitchType.STATELESS_REVERSE:
                 if (on) {
                     callback();
                     break;
@@ -207,7 +214,7 @@ HTTP_SWITCH.prototype = {
             return;
         }
 
-        if (this.switchType === "stateful" && urlArray.length !== 1) {
+        if (this.switchType === SwitchType.STATEFUL && urlArray.length !== 1) {
             this.log("Stateful switch cannot have multiple on/off urls");
             callback(new Error("Confused with urls"));
             return;
@@ -271,14 +278,14 @@ HTTP_SWITCH.prototype = {
         const that = this;
 
         switch (this.switchType) {
-            case "stateless":
+            case SwitchType.STATELESS:
                 this.log("Resetting switch to OFF");
 
                 setTimeout(function () {
                     this.homebridgeService.setCharacteristic(Characteristic.On, false);
                 }.bind(this), that.timeout);
                 break;
-            case "stateless-reverse":
+            case SwitchType.STATELESS_REVERSE:
                 this.log("Resetting switch to ON");
 
                 setTimeout(function () {
