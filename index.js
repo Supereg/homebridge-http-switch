@@ -22,7 +22,7 @@ function HTTP_SWITCH(log, config) {
 
     this.switchType = config.switchType || 'stateful';
     this.timeout = config.timeout || 1000;
-    if (typeof timeout !== 'number') {
+    if (typeof this.timeout !== 'number') {
         this.timeout = 1000;
     }
 
