@@ -3,6 +3,7 @@
 let Service, Characteristic, api;
 const request = require("request");
 const async = require("async");
+const once = require('hap-nodejs/util/once').once;
 const packageJSON = require('./package.json');
 
 module.exports = function (homebridge) {
@@ -73,6 +74,17 @@ function HTTP_SWITCH(log, config) {
     if (this.switchType === SwitchType.STATELESS_REVERSE)
         this.homebridgeService.setCharacteristic(Characteristic.On, true);
 
+    this.lastAction = 0;
+    this.pullInterval = config.pullInterval;
+    if (this.pullInterval) {
+        if (this.switchType === SwitchType.STATEFUL) {
+            setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
+        }
+        else {
+            this.log("'pullInterval' was specified, however switch is stateless. Ignoring property and are not enabling pull updates!");
+        }
+    }
+
     this.notificationID = config.notificationID;
     this.notificationPassword = config.notificationPassword;
 
@@ -126,10 +138,40 @@ HTTP_SWITCH.prototype = {
             this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
 
         this.ignoreNextSet = true;
+        this.lastAction = new Date().getTime();
+
         this.homebridgeService.setCharacteristic(characteristic, value);
     },
 
+    handlePullUpdate: function() {
+        this.getStatus(once((error, value) => {
+            const currentTimeMillis = new Date().getTime();
+            const lastActionDelta = currentTimeMillis - this.lastAction;
+
+            if (lastActionDelta < this.pullInterval) {
+                if (this.debug)
+                    this.log(`Waiting a bit longer with pull. delta was ${lastActionDelta} and pullIntervall ${this.pullInterval}`);
+                setTimeout(this.handlePullUpdate.bind(this), this.pullInterval - lastActionDelta);
+                return;
+            }
+
+            if (error) {
+                if (this.debug)
+                    this.log("Error occurred while pulling update from switch: " + error.message);
+            }
+            else {
+                this.ignoreNextSet = true;
+                this.homebridgeService.setCharacteristic(Characteristic.On, value);
+            }
+
+            this.lastAction = currentTimeMillis;
+            setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
+        }));
+    },
+
     getStatus: function (callback) {
+        this.lastAction = new Date().getTime();
+
         switch (this.switchType) {
             case SwitchType.STATEFUL:
                 if (!this.statusUrl) {
@@ -175,6 +217,8 @@ HTTP_SWITCH.prototype = {
             callback();
             return;
         }
+
+        this.lastAction = new Date().getTime();
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:

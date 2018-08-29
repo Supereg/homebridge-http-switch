@@ -11,12 +11,29 @@ _stateless_ switches (`stateless` and `stateless-reverse`) which differ in their
 you can specify multiple urls to be targeted when the switch is turned On/Off.   
 More about on how to configure such switches can be read further down.
 
+## Updating the switch state in HomeKit
+
 The _'On'_ characteristic from the _'switch'_ service has the permission to `notify` the HomeKit controller of state 
-changes. `homebridge-http-switch` is able to receive such notifications and forwards them to the HomeKit controller. 
-State changes happening on the http device can then be instantly reflected for example in the Home App.  
+changes. `homebridge-http-switch` supports two ways to send state changes to HomeKit.
+
+#### The 'pull' way:
+
+The 'pull' way is probably the easiest to set up and supported in every scenario. `homebridge-http-switch` requests the 
+state of the switch in an specified interval (pulling) and sends the value to HomeKit.  
+Look at the list of configuration options for `pullInterval` if you want to configure it.
+
+#### The 'push' way:
+
+When using the 'push' concept the http device itself sends the updated value itself to `homebridge-http-switch` whenever 
+the value changes. This is more efficient as the new value is updated instantly and `homebridge-http-switch` does not 
+need to make needless requests when the value didn't actually change. However because the http device needs to actively 
+notify the `homebridge-http-switch` plugin there is more work need to implement this method into your http device.  
 How to implement the protocol into your http device can be read in the chapter [**Notification Server**](#notification-server)
 
 ## Configuration:
+
+These are all available configuration options. Properties marked as **optional** can be left out. 
+Chose what you need.
 
 ```json
 {
@@ -59,6 +76,9 @@ expects to return 0 for OFF or 1 for ON without any html markup (**required**)
 * `auth` is **optional**. If your http server expects basic authentication you can set `username` and `password` in the `auth` object 
 which is then used for any given url. If you just need authentication for one specific url you still need to use the 
 following pattern: `http://username:password@example.com`
+* `pullInterval` is **optional**. The property expects an interval in **milliseconds** in which the plugin pulls updates 
+from your http device. For more information read [pulling updates](#the-pull-way). (This option is only supported when 
+`switchType` is 'stateful')
 * `debug` is **optional**, default is 'false'. If enabled the plugin prints more detailed debug information
 
 ## Stateless Switch
@@ -139,7 +159,7 @@ Below you can see an example config of an stateless switch with three urls.
 [homebridge-http-notification-server](https://github.com/Supereg/homebridge-http-notification-server) in order to receive
 updates when the state changes at your external program. For details on how to implement those updates and how to 
 install and configure `homebridge-http-notification-server`, please refer to the 
-[README](https://github.com/Supereg/homebridge-http-notification-server) of the repository.
+[README](https://github.com/Supereg/homebridge-http-notification-server) of the repository first.
 
 Down here is an example on how to configure `homebridge-http-switch` to work with your implementation of the 
 `homebridge-http-notification-server`.
