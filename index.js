@@ -3,7 +3,6 @@
 let Service, Characteristic, api;
 const request = require("request");
 const async = require("async");
-const once = require('hap-nodejs/util/once').once;
 const packageJSON = require('./package.json');
 
 module.exports = function (homebridge) {
@@ -74,11 +73,10 @@ function HTTP_SWITCH(log, config) {
     if (this.switchType === SwitchType.STATELESS_REVERSE)
         this.homebridgeService.setCharacteristic(Characteristic.On, true);
 
-    this.lastAction = 0;
     this.pullInterval = config.pullInterval;
     if (this.pullInterval) {
         if (this.switchType === SwitchType.STATEFUL) {
-            setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
+            this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
         }
         else {
             this.log("'pullInterval' was specified, however switch is stateless. Ignoring property and are not enabling pull updates!");
@@ -138,23 +136,13 @@ HTTP_SWITCH.prototype = {
             this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
 
         this.ignoreNextSet = true;
-        this.lastAction = new Date().getTime();
+        this._resetPullTimeout();
 
         this.homebridgeService.setCharacteristic(characteristic, value);
     },
 
     handlePullUpdate: function() {
-        this.getStatus(once((error, value) => {
-            const currentTimeMillis = new Date().getTime();
-            const lastActionDelta = currentTimeMillis - this.lastAction;
-
-            if (lastActionDelta < this.pullInterval) {
-                if (this.debug)
-                    this.log(`Waiting a bit longer with pull. delta was ${lastActionDelta} and pullIntervall ${this.pullInterval}`);
-                setTimeout(this.handlePullUpdate.bind(this), this.pullInterval - lastActionDelta);
-                return;
-            }
-
+        this.getStatus(this._once((error, value) => {
             if (error) {
                 if (this.debug)
                     this.log("Error occurred while pulling update from switch: " + error.message);
@@ -164,13 +152,20 @@ HTTP_SWITCH.prototype = {
                 this.homebridgeService.setCharacteristic(Characteristic.On, value);
             }
 
-            this.lastAction = currentTimeMillis;
-            setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
+            this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
         }));
     },
 
+    _resetPullTimeout: function () {
+        if (!this.pullTimeout)
+            return;
+
+        clearTimeout(this.pullTimeout);
+        this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
+    },
+
     getStatus: function (callback) {
-        this.lastAction = new Date().getTime();
+        this._resetPullTimeout();
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:
@@ -218,7 +213,7 @@ HTTP_SWITCH.prototype = {
             return;
         }
 
-        this.lastAction = new Date().getTime();
+        this._resetPullTimeout();
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:
@@ -360,6 +355,19 @@ HTTP_SWITCH.prototype = {
                 callback(error, response, body);
             }
         )
+    },
+
+    _once: function (func) {
+        let called = false;
+
+        return function() {
+            if (called)
+                throw new Error("This callback function has already been called by someone else; it can only be called one time.");
+            else {
+                called = true;
+                return func.apply(this, arguments);
+            }
+        };
     }
 
 };
