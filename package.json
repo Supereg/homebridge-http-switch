@@ -6,6 +6,9 @@
   "keywords": [
     "homebridge-plugin"
   ],
+  "scripts": {
+    "test": "node ./test/init.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Supereg/homebridge-http-switch"

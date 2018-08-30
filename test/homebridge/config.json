@@ -1,0 +1,23 @@
+{
+  "bridge": {
+    "name": "Homebridge",
+    "username": "AE:72:E6:5D:1D:83",
+    "port": 51826,
+    "pin": "897-23-872"
+  },
+
+  "accessories": [
+    {
+      "accessory": "HTTP-SWITCH",
+      "name": "Test Switch",
+
+      "httpMethod": "GET",
+      "onUrl": "http://localhost:8085/on",
+      "offUrl": "http://localhost:8085/off",
+
+      "statusUrl": "http://localhost:8085/get",
+
+      "debug": true
+    }
+  ]
+}
