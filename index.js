@@ -1,8 +1,12 @@
 "use strict";
 
 let Service, Characteristic, api;
-const request = require("request");
-const async = require("async");
+
+const http = require("homebridge-http-base").http;
+const configParser = require("homebridge-http-base").configParser;
+const PullTimer = require("homebridge-http-base").PullTimer;
+const notifications = require("homebridge-http-base").notifications;
+
 const packageJSON = require('./package.json');
 
 module.exports = function (homebridge) {
@@ -23,7 +27,6 @@ const SwitchType = Object.freeze({
 function HTTP_SWITCH(log, config) {
     this.log = log;
     this.name = config.name;
-
     this.debug = config.debug || false;
 
     this.switchType = config.switchType || SwitchType.STATEFUL;
@@ -34,34 +37,38 @@ function HTTP_SWITCH(log, config) {
         this.timeout = 1000;
     }
 
-    this.httpMethod = config.httpMethod || "GET";
-
-    this.onUrl = [];
-    this.offUrl = [];
-
-    if (!!config.onUrl && config.onUrl.constructor === Array) {
-        this.onUrl = config.onUrl;
-    }
-    else if (config.onUrl) {
-        this.onUrl = [config.onUrl];
+    const success = this.parseUrls(config); // parsing 'onUrl', 'offUrl', 'statusUrl'
+    if (!success) {
+        this.log("Aborting...");
+        return;
     }
 
-    if (!!config.offUrl && config.offUrl.constructor === Array) {
-        this.offUrl = config.offUrl;
-    }
-    else if (config.offUrl) {
-        this.offUrl = [config.offUrl];
-    }
+    /** @namespace config.httpMethod */
+    if (config.httpMethod) { // if we have it defined globally override the existing one of ON and OFF config object
+        this.on.forEach(urlObject => urlObject.method = config.httpMethod);
+        this.off.forEach(urlObject => urlObject.method = config.httpMethod);
 
-    this.statusUrl = config.statusUrl;
+        /*
+         * New way would expect to also override method of this.status, but old implementation used fixed 'httpMethod' (GET)
+         * for this.status and was unaffected by this config property. So we leave this.status unaffected for now to maintain
+         * backwards compatibility.
+         */
+    }
 
     if (config.auth) {
         if (!(config.auth.username && config.auth.password))
-            this.log("Authentication parameters are not set completely. Username or password is missing!");
+            this.log("auth.username' and/or 'auth.password' was not set!");
         else {
-            this.auth = {};
-            this.auth.username = config.auth.username;
-            this.auth.password = config.auth.password;
+            this.on.forEach(urlObject => {
+                urlObject.auth.username = config.auth.username;
+                urlObject.auth.password = config.auth.password;
+            });
+            this.off.forEach(urlObject => {
+                urlObject.auth.username = config.auth.username;
+                urlObject.auth.password = config.auth.password;
+            });
+            this.status.auth.username = config.auth.username;
+            this.status.auth.password = config.auth.password;
         }
     }
 
@@ -73,34 +80,84 @@ function HTTP_SWITCH(log, config) {
     if (this.switchType === SwitchType.STATELESS_REVERSE)
         this.homebridgeService.setCharacteristic(Characteristic.On, true);
 
-    this.pullInterval = config.pullInterval;
-    if (this.pullInterval) {
+    /** @namespace config.pullInterval */
+    if (config.pullInterval) {
         if (this.switchType === SwitchType.STATEFUL) {
-            this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
+            this.pullTimer = new PullTimer(config.pullInterval, this.getStatus.bind(this), value => {
+                this.ignoreNextSet = true;
+                this.homebridgeService.setCharacteristic(Characteristic.On, value);
+            });
+            this.pullTimer.start();
+            // this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
         }
-        else {
-            this.log("'pullInterval' was specified, however switch is stateless. Ignoring property and are not enabling pull updates!");
-        }
+        else
+            this.log("'pullInterval' was specified, however switch is stateless. Ignoring property and not enabling pull updates!");
     }
 
-    this.notificationID = config.notificationID;
-    this.notificationPassword = config.notificationPassword;
-
-    if (this.notificationID) {
-        api.on('didFinishLaunching', function() {
-            if (api.notificationRegistration && typeof api.notificationRegistration === "function") {
-                try {
-                    api.notificationRegistration(this.notificationID, this.handleNotification.bind(this), this.notificationPassword);
-                    this.log("Detected running notification server. Registered successfully!");
-                } catch (error) {
-                    this.log("Could not register notification handler. ID '" + this.notificationID + "' is already taken!")
-                }
-            }
-        }.bind(this));
-    }
+    /** @namespace config.notificationPassword */
+    /** @namespace config.notificationID */
+    notifications.enqueueNotificationRegistrationIfDefined(api, log, config.notificationID, config.notificationPassword, this.handleNotification.bind(this));
 }
 
 HTTP_SWITCH.prototype = {
+
+    parseUrls: function (config) {
+        /** @namespace config.onUrl */
+        if (this.switchType === SwitchType.STATEFUL || this.switchType === SwitchType.STATELESS) {
+            if (config.onUrl) {
+                try {
+                    this.on = configParser.parseMultipleUrlProperty(config.onUrl); // TODO multiple urls only in stateless mode?
+                } catch (error) {
+                    this.log.warn("Error occurred while parsing 'onUrl': " + error.message);
+                    return false;
+                }
+            }
+            else {
+                this.log.warn(`Property 'onUrl' is required when using switchType '${this.switchType}'`);
+                return false;
+            }
+        }
+        else if (this.switchType === SwitchType.STATELESS_REVERSE && config.onUrl)
+            this.log.warn(`Property 'onUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
+
+        /** @namespace config.offUrl */
+        if (this.switchType === SwitchType.STATEFUL || this.switchType === SwitchType.STATELESS_REVERSE) {
+            if (config.offUrl) {
+                try {
+                    this.off = configParser.parseMultipleUrlProperty(config.offUrl);  // TODO multiple urls only in stateless mode?
+                } catch (error) {
+                    this.log.warn("Error occurred while parsing 'offUrl': " + error.message);
+                    return false;
+                }
+            }
+            else {
+                this.log.warn(`Property 'offUrl' is required when using switchType '${this.switchType}'`);
+                return false;
+            }
+        }
+        else if (this.switchType === SwitchType.STATELESS && config.offUrl)
+            this.log.warn(`Property 'offUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
+
+        if (this.switchType === SwitchType.STATEFUL) {
+            /** @namespace config.statusUrl */
+            if (config.statusUrl) {
+                try {
+                    this.status = configParser.parseUrlProperty(config.statusUrl);
+                } catch (error) {
+                    this.log.warn("Error occurred while parsing 'statusUrl': " + error.message);
+                    return false;
+                }
+            }
+            else {
+                this.log.warn(`Property 'statusUrl' is required when using switchType '${this.switchType}'`);
+                return false;
+            }
+        }
+        else
+            this.log.warn(`Property 'statusUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
+
+        return true;
+    },
 
     identify: function (callback) {
         this.log("Identify requested!");
@@ -108,6 +165,9 @@ HTTP_SWITCH.prototype = {
     },
 
     getServices: function () {
+        if (!this.homebridgeService)
+            return [];
+
         const informationService = new Service.AccessoryInformation();
 
         informationService
@@ -119,6 +179,7 @@ HTTP_SWITCH.prototype = {
         return [informationService, this.homebridgeService];
     },
 
+    /** @namespace body.characteristic */
     handleNotification: function(body) {
         const value = body.value;
 
@@ -135,47 +196,20 @@ HTTP_SWITCH.prototype = {
         if (this.debug)
             this.log("Updating '" + body.characteristic + "' to new value: " + body.value);
 
-        this.ignoreNextSet = true;
-        this._resetPullTimeout();
+        if (this.pullTimer)
+            this.pullTimer.resetTimer();
 
+        this.ignoreNextSet = true;
         this.homebridgeService.setCharacteristic(characteristic, value);
     },
 
-    handlePullUpdate: function() {
-        this.getStatus(this._once((error, value) => {
-            if (error) {
-                if (this.debug)
-                    this.log("Error occurred while pulling update from switch: " + error.message);
-            }
-            else {
-                this.ignoreNextSet = true;
-                this.homebridgeService.setCharacteristic(Characteristic.On, value);
-            }
-
-            this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
-        }));
-    },
-
-    _resetPullTimeout: function () {
-        if (!this.pullTimeout)
-            return;
-
-        clearTimeout(this.pullTimeout);
-        this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
-    },
-
     getStatus: function (callback) {
-        this._resetPullTimeout();
+        if (this.pullTimer)
+            this.pullTimer.resetTimer();
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:
-                if (!this.statusUrl) {
-                    this.log.warn("Ignoring getStatus() request, 'statusUrl' is not defined");
-                    callback(new Error("No 'statusUrl' url defined!"));
-                    break;
-                }
-
-                this._httpRequest(this.statusUrl, "", "GET", function (error, response, body) {
+                http.httpRequest(this.status, (error, response, body) => {
                     if (error) {
                         this.log("getStatus() failed: %s", error.message);
                         callback(error);
@@ -188,11 +222,11 @@ HTTP_SWITCH.prototype = {
                         if (this.debug)
                             this.log(`Body of status response is: '${body}'`);
 
-                        const switchedOn = parseInt(body) > 0;
+                        const switchedOn = parseInt(body) > 0; // TODO support regex parsing
                         this.log("Switch is currently %s", switchedOn? "ON": "OFF");
                         callback(null, switchedOn);
                     }
-                }.bind(this));
+                });
                 break;
             case SwitchType.STATELESS:
                 callback(null, false);
@@ -201,7 +235,7 @@ HTTP_SWITCH.prototype = {
                 callback(null, true);
                 break;
             default:
-                callback(null, false);
+                callback(new Error("Unrecognized switch type"));
                 break;
         }
     },
@@ -213,11 +247,12 @@ HTTP_SWITCH.prototype = {
             return;
         }
 
-        this._resetPullTimeout();
+        if (this.pullTimer)
+            this.pullTimer.resetTimer();
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:
-                this.makeSetRequest(on, callback);
+                this._makeSetRequest(on, callback);
                 break;
             case SwitchType.STATELESS:
                 if (!on) {
@@ -225,7 +260,7 @@ HTTP_SWITCH.prototype = {
                     break;
                 }
 
-                this.makeSetRequest(true, callback);
+                this._makeSetRequest(true, callback);
                 break;
             case SwitchType.STATELESS_REVERSE:
                 if (on) {
@@ -233,141 +268,87 @@ HTTP_SWITCH.prototype = {
                     break;
                 }
 
-                this.makeSetRequest(false, callback);
+                this._makeSetRequest(false, callback);
                 break;
 
             default:
-                callback();
+                callback(new Error("Unrecognized switch type"));
                 break;
         }
     },
 
-    makeSetRequest: function (on, callback) {
-        const that = this;
+    _makeSetRequest: function (on, callback) {
+        const urlObjectArray = on? this.on: this.off;
 
-        const urlArray = on ? this.onUrl : this.offUrl;
+        http.multipleHttpRequests(urlObjectArray, results => {
+            const errors = [];
+            const successes = [];
 
-        if (urlArray.length === 0) {
-            this.log("Ignoring setStatus() request 'offUrl' or 'onUrl' is not defined");
-            callback(new Error("No 'onUrl' or 'offUrl' defined!"));
-            return;
-        }
-
-        if (this.switchType === SwitchType.STATEFUL && urlArray.length !== 1) {
-            this.log("Stateful switch cannot have multiple on/off urls");
-            callback(new Error("Confused with urls"));
-            return;
-        }
-
-        const functionArray = new Array(urlArray.length);
-        for (let i = 0; i < urlArray.length; i++) {
-            const url = urlArray[i];
-
-            functionArray[i] = function (callback) {
-                that._httpRequest(url, "", that.httpMethod, function (error, response, body) {
-                    if (error) {
-                        that.log("setStatus()[" + (i + 1) + "] failed: %s", error.message);
-                        callback(error);
-                    }
-                    else if (response.statusCode !== 200) {
-                        that.log("setStatus()[" + (i + 1) + "] http request returned http error code: %s", response.statusCode);
-                        callback(new Error("Got html error code " + response.statusCode));
-                    }
-                    else {
-                        that.log("setStatus()[" + (i + 1) + "] successfully set switch to %s", on? "ON": "OFF");
-                        callback(null, body);
-                    }
-                }.bind(this));
-            }
-        }
-
-        async.parallel(functionArray, function (errors, results) {
-            that.resetSwitchWithTimeout();
-
-            if (functionArray.length === 1) {
-                callback(errors, results);
-            }
-            else {
-                let errors = 0;
-                let errorMessage = " errors occurred when calling multiple urls: {";
-
-                for (let i = 0; i < errors.length; i++) {
-                    const error = errors[i];
-
-                    if (error instanceof Error) {
-                        errors++;
-                        errorMessage += "\"" + error.message + "\", ";
-                    }
+            results.forEach((result, i) => {
+                if (result.error) {
+                    errors.push({
+                        index: i,
+                        error: result.error
+                    });
                 }
-
-                errorMessage = errors + errorMessage.substring(0, errorMessage.length - 2) + "}";
-
-                if (errors > 0) {
-                    callback(new Error(errorMessage.format()));
-                    that.log(errorMessage);
+                else if (result.response.statusCode !== 200) {
+                    errors.push({
+                        index: i,
+                        error: new Error(`HTTP request returned with error code ${result.response.statusCode}`)
+                    });
                 }
                 else {
-                    callback();
+                    successes.push({
+                        index: i,
+                        value: result.body
+                    });
                 }
+            });
+
+            if (errors.length > 0) {
+                if (successes.length === 0) {
+                    if (errors.length === 1) {
+                        this.log(`Error occurred setting state of switch: ${errors[0].message}`)
+                        // one single url => returned error
+                    }
+                    else {
+                        this.log("Error occurred setting state of switch with every request:");
+                        this.log(errors);
+                    }
+                }
+                else {
+                    this.log(`${successes.length} requests successfully set switch to ${on? "ON": "OFF"}; ${errors.length} encountered and error:`);
+                    this.log(errors);
+                }
+
+                callback(new Error("Some or every request returned with an error. See above!"));
             }
+            else {
+                this.log(`Successfully set switch to ${on ? "ON" : "OFF"}${successes.length > 1 ? " with every request" : ""}`);
+                callback();
+            }
+
+            this.resetSwitchWithTimeoutIfStateless();
         });
     },
 
-    resetSwitchWithTimeout: function () {
-        const that = this;
-
+    resetSwitchWithTimeoutIfStateless: function () {
         switch (this.switchType) {
             case SwitchType.STATELESS:
                 this.log("Resetting switch to OFF");
 
-                setTimeout(function () {
+                setTimeout(() => {
                     this.homebridgeService.setCharacteristic(Characteristic.On, false);
-                }.bind(this), that.timeout);
+                }, this.timeout);
                 break;
             case SwitchType.STATELESS_REVERSE:
                 this.log("Resetting switch to ON");
 
-                setTimeout(function () {
+                setTimeout(() => {
                     this.homebridgeService.setCharacteristic(Characteristic.On, true);
-                }.bind(this), that.timeout);
+                }, this.timeout);
                 break;
         }
     },
-
-    _httpRequest: function (url, body, method, callback) {
-        let auth = undefined;
-
-        if (this.auth && this.auth.username && this.auth.password) {
-            auth = {};
-            auth.username = this.auth.username;
-            auth.password = this.auth.password;
-        }
-
-        request(
-            {
-                url: url,
-                body: body,
-                method: method,
-                rejectUnauthorized: false,
-                auth: auth
-            },
-            function (error, response, body) {
-                callback(error, response, body);
-            }
-        )
-    },
-
-    _once: function (func) {
-        let called = false;
-
-        return function() {
-            if (called)
-                throw new Error("This callback function has already been called by someone else; it can only be called one time.");
-            else {
-                called = true;
-                return func.apply(this, arguments);
-            }
-        };
-    }
 
 };
