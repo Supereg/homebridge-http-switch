@@ -12,10 +12,17 @@
       "name": "Test Switch",
 
       "httpMethod": "GET",
-      "onUrl": "http://localhost:8085/on",
+      "onUrl": {
+        "url": "http://localhost:8085/on"
+      },
       "offUrl": "http://localhost:8085/off",
 
-      "statusUrl": "http://localhost:8085/get",
+      "statusUrl": {
+        "url": "http://localhost:8085/get",
+        "method": "GET"
+      },
+
+      "pullInterval": 5000,
 
       "debug": true
     }
