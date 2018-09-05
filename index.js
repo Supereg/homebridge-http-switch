@@ -45,6 +45,7 @@ function HTTP_SWITCH(log, config) {
 
     /** @namespace config.httpMethod */
     if (config.httpMethod) { // if we have it defined globally override the existing one of ON and OFF config object
+        this.log("Global 'httpMethod' is specified. Overriding method of on and off!");
         this.on.forEach(urlObject => urlObject.method = config.httpMethod);
         this.off.forEach(urlObject => urlObject.method = config.httpMethod);
 
@@ -83,12 +84,11 @@ function HTTP_SWITCH(log, config) {
     /** @namespace config.pullInterval */
     if (config.pullInterval) {
         if (this.switchType === SwitchType.STATEFUL) {
-            this.pullTimer = new PullTimer(config.pullInterval, this.getStatus.bind(this), value => {
+            this.pullTimer = new PullTimer(this.log, config.pullInterval, this.getStatus.bind(this), value => {
                 this.ignoreNextSet = true;
                 this.homebridgeService.setCharacteristic(Characteristic.On, value);
             });
             this.pullTimer.start();
-            // this.pullTimeout = setTimeout(this.handlePullUpdate.bind(this), this.pullInterval);
         }
         else
             this.log("'pullInterval' was specified, however switch is stateless. Ignoring property and not enabling pull updates!");
