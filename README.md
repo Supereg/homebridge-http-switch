@@ -196,7 +196,8 @@ Since **ON** is the only possible state you do not need to declare `onUrl` and `
 
 ## Multiple On or Off Urls
 If you wish to do so you can specify an array of urls or urlObjects (`onUrl` or `offUrl`) when your switch is a 
-**stateless switch** or a **reverse-stateless switch**. This is not possible with a normal stateful switch.
+**stateless switch** or a **reverse-stateless switch**.  
+**This is not possible with a normal stateful switch.**
 
 Blow are two example configurations of an stateless switch with three urls. 
 One is using simple string array and the other is using simple urlObject arrays. 

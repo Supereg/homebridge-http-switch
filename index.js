@@ -106,7 +106,9 @@ HTTP_SWITCH.prototype = {
         if (this.switchType === SwitchType.STATEFUL || this.switchType === SwitchType.STATELESS) {
             if (config.onUrl) {
                 try {
-                    this.on = configParser.parseMultipleUrlProperty(config.onUrl); // TODO multiple urls only in stateless mode?
+                    this.on = this.switchType === SwitchType.STATEFUL
+                        ? configParser.parseUrlProperty(config.onUrl)
+                        : configParser.parseMultipleUrlProperty(config.onUrl);
                 } catch (error) {
                     this.log.warn("Error occurred while parsing 'onUrl': " + error.message);
                     return false;
@@ -124,7 +126,9 @@ HTTP_SWITCH.prototype = {
         if (this.switchType === SwitchType.STATEFUL || this.switchType === SwitchType.STATELESS_REVERSE) {
             if (config.offUrl) {
                 try {
-                    this.off = configParser.parseMultipleUrlProperty(config.offUrl);  // TODO multiple urls only in stateless mode?
+                    this.off = this.switchType === SwitchType.STATEFUL
+                        ? configParser.parseUrlProperty(config.offUrl)
+                        : configParser.parseMultipleUrlProperty(config.offUrl);
                 } catch (error) {
                     this.log.warn("Error occurred while parsing 'offUrl': " + error.message);
                     return false;
