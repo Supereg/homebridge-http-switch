@@ -324,7 +324,7 @@ HTTP_SWITCH.prototype = {
                         // one single url => returned error
                     }
                     else {
-                        this.log("Error occurred setting state of switch with every request:");
+                        this.log(`Error occurred setting state of switch with every request (${errors.length}):`);
                         this.log(errors);
                     }
                 }
@@ -336,7 +336,7 @@ HTTP_SWITCH.prototype = {
                 callback(new Error("Some or every request returned with an error. See above!"));
             }
             else {
-                this.log(`Successfully set switch to ${on ? "ON" : "OFF"}${successes.length > 1 ? " with every request" : ""}`);
+                this.log(`Successfully set switch to ${on ? "ON" : "OFF"}${successes.length > 1 ? ` with every request (${successes.length})` : ""}`);
                 callback();
             }
 
