@@ -46,8 +46,10 @@ function HTTP_SWITCH(log, config) {
     /** @namespace config.httpMethod */
     if (config.httpMethod) { // if we have it defined globally override the existing one of ON and OFF config object
         this.log("Global 'httpMethod' is specified. Overriding method of on and off!");
-        this.on.forEach(urlObject => urlObject.method = config.httpMethod);
-        this.off.forEach(urlObject => urlObject.method = config.httpMethod);
+        if (this.on)
+            this.on.forEach(urlObject => urlObject.method = config.httpMethod);
+        if (this.off)
+            this.off.forEach(urlObject => urlObject.method = config.httpMethod);
 
         /*
          * New way would expect to also override method of this.status, but old implementation used fixed 'httpMethod' (GET)
@@ -60,16 +62,22 @@ function HTTP_SWITCH(log, config) {
         if (!(config.auth.username && config.auth.password))
             this.log("auth.username' and/or 'auth.password' was not set!");
         else {
-            this.on.forEach(urlObject => {
-                urlObject.auth.username = config.auth.username;
-                urlObject.auth.password = config.auth.password;
-            });
-            this.off.forEach(urlObject => {
-                urlObject.auth.username = config.auth.username;
-                urlObject.auth.password = config.auth.password;
-            });
-            this.status.auth.username = config.auth.username;
-            this.status.auth.password = config.auth.password;
+            if (this.on) {
+                this.on.forEach(urlObject => {
+                    urlObject.auth.username = config.auth.username;
+                    urlObject.auth.password = config.auth.password;
+                });
+            }
+            if (this.off) {
+                this.off.forEach(urlObject => {
+                    urlObject.auth.username = config.auth.username;
+                    urlObject.auth.password = config.auth.password;
+                });
+            }
+            if (this.status) {
+                this.status.auth.username = config.auth.username;
+                this.status.auth.password = config.auth.password;
+            }
         }
     }
 
