@@ -115,7 +115,7 @@ HTTP_SWITCH.prototype = {
             if (config.onUrl) {
                 try {
                     this.on = this.switchType === SwitchType.STATEFUL
-                        ? configParser.parseUrlProperty(config.onUrl)
+                        ? [configParser.parseUrlProperty(config.onUrl)]
                         : configParser.parseMultipleUrlProperty(config.onUrl);
                 } catch (error) {
                     this.log.warn("Error occurred while parsing 'onUrl': " + error.message);
@@ -135,7 +135,7 @@ HTTP_SWITCH.prototype = {
             if (config.offUrl) {
                 try {
                     this.off = this.switchType === SwitchType.STATEFUL
-                        ? configParser.parseUrlProperty(config.offUrl)
+                        ? [configParser.parseUrlProperty(config.offUrl)]
                         : configParser.parseMultipleUrlProperty(config.offUrl);
                 } catch (error) {
                     this.log.warn("Error occurred while parsing 'offUrl': " + error.message);
