@@ -30,20 +30,20 @@ changes. `homebridge-http-switch` supports two ways to send state changes to Hom
 
 The 'pull' way is probably the easiest to set up and supported in every scenario. `homebridge-http-switch` requests the 
 state of the switch in an specified interval (pulling) and sends the value to HomeKit.  
-Look at the list of configuration options for `pullInterval` if you want to configure it.
+Look for `pullInterval` in the list of configuration options if you want to configure it.
 
 #### The 'push' way:
 
 When using the 'push' concept the http device itself sends the updated value itself to `homebridge-http-switch` whenever 
 the value changes. This is more efficient as the new value is updated instantly and `homebridge-http-switch` does not 
 need to make needless requests when the value didn't actually change. However because the http device needs to actively 
-notify the `homebridge-http-switch` plugin there is more work need to implement this method into your http device.  
+notify the `homebridge-http-switch` plugin there is more work needed to implement this method into your http device.  
 How to implement the protocol into your http device can be read in the chapter [**Notification Server**](#notification-server)
 
 ## Configuration:
 
 The configuration can contain the following properties:
-* `name` \<string\> **required**: Defines the name which is later display in HomeKit
+* `name` \<string\> **required**: Defines the name which is later displayed in HomeKit
 * `switchType` \<string\> **optional** \(Default: **"stateful"**\): Defines the type of the switch:
     * **"stateful"**: A normal switch and thus the default value.
     * **"stateless"**: A stateless switch remains in only one state. If you switch it to on, it immediately goes back to off. 
@@ -54,8 +54,8 @@ The configuration can contain the following properties:
 (and other properties when using an urlObject) which is called when you turn on the switch.
 * `offUrl` \<string | \[string\] | [urlObject](#urlobject) | [[urlObject](#urlobject)]\> **required**: Defines the url 
 (and other properties when using an urlObject) which is called when you turn off the switch.
-* `statusUrl` \<string | \[string\] | [urlObject](#urlobject) | [[urlObject](#urlobject)]\> **required**: Defines the url 
-(and other properties when using an urlObject) to query the current state of the switch. It currently expects the http 
+* `statusUrl` \<string | [urlObject](#urlobject)\> **required**: Defines the url 
+(and other properties when using an urlObject) to query the current state from the switch. It currently expects the http 
 server to return **'0'** for OFF and **'1'** for ON leaving out any html markup.
 * `httpMethod` _**deprecated**_ \<string\> **optional**: If defined it sets the http method for `onUrl` and `offUrl`. 
 This property is deprecated and only present for backwards compatibility. It is recommended to use an 
@@ -73,7 +73,7 @@ pulls updates from your http device. For more information read [pulling updates]
 (This option is only supported when `switchType` is **"stateful"**)
 * `debug` \<boolean\> **optional**: If set to true debug mode is enabled and the plugin prints more detailed information.
 
-Blow are two example configurations. One is using simple string urls and the other is using simple urlObjects.  
+Below are two example configurations. One is using simple string urls and the other is using simple urlObjects.  
 Both configs can be used for a basic plugin configuration.
 
 ```json
@@ -199,7 +199,7 @@ If you wish to do so you can specify an array of urls or urlObjects (`onUrl` or 
 **stateless switch** or a **reverse-stateless switch**.  
 **This is not possible with a normal stateful switch.**
 
-Blow are two example configurations of an stateless switch with three urls. 
+Below are two example configurations of an stateless switch with three urls. 
 One is using simple string array and the other is using simple urlObject arrays. 
 
 ```json
