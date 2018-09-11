@@ -39,7 +39,7 @@ function HTTP_SWITCH(log, config) {
 
     const success = this.parseUrls(config); // parsing 'onUrl', 'offUrl', 'statusUrl'
     if (!success) {
-        this.log("Aborting...");
+        this.log.warn("Aborting...");
         return;
     }
 
