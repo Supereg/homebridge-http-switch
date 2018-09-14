@@ -105,6 +105,7 @@ function HTTP_SWITCH(log, config) {
     /** @namespace config.notificationPassword */
     /** @namespace config.notificationID */
     notifications.enqueueNotificationRegistrationIfDefined(api, log, config.notificationID, config.notificationPassword, this.handleNotification.bind(this));
+    this.log("Switch successfully configured...");
 }
 
 HTTP_SWITCH.prototype = {
