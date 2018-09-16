@@ -166,7 +166,7 @@ HTTP_SWITCH.prototype = {
                 return false;
             }
         }
-        else
+        else if (config.statusUrl)
             this.log.warn(`Property 'statusUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
 
         return true;
