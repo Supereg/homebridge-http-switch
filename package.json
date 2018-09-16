@@ -1,6 +1,6 @@
 {
   "name": "homebridge-http-switch",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Powerful http switch for Homebridge",
   "license": "ISC",
   "keywords": [
