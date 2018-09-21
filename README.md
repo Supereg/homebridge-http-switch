@@ -43,35 +43,42 @@ How to implement the protocol into your http device can be read in the chapter [
 ## Configuration:
 
 The configuration can contain the following properties:
-* `name` \<string\> **required**: Defines the name which is later displayed in HomeKit
-* `switchType` \<string\> **optional** \(Default: **"stateful"**\): Defines the type of the switch:
+- `name` \<string\> **required**: Defines the name which is later displayed in HomeKit
+- `switchType` \<string\> **optional** \(Default: **"stateful"**\): Defines the type of the switch:
     * **"stateful"**: A normal switch and thus the default value.
     * **"stateless"**: A stateless switch remains in only one state. If you switch it to on, it immediately goes back to off. 
     Configuration example is further [down](#stateless-switch).
     * **"stateless-reverse"**: Default position is ON. If you switch it to off, it immediately goes back to on. 
     Configuration example is further [down](#reverse-stateless-switch).
+
 * `onUrl` \<string | \[string\] | [urlObject](#urlobject) | [[urlObject](#urlobject)]\> **required**: Defines the url 
 (and other properties when using an urlObject) which is called when you turn on the switch.
 * `offUrl` \<string | \[string\] | [urlObject](#urlobject) | [[urlObject](#urlobject)]\> **required**: Defines the url 
 (and other properties when using an urlObject) which is called when you turn off the switch.
 * `statusUrl` \<string | [urlObject](#urlobject)\> **required**: Defines the url 
-(and other properties when using an urlObject) to query the current state from the switch. It currently expects the http 
-server to return **'0'** for OFF and **'1'** for ON leaving out any html markup.
-* `httpMethod` _**deprecated**_ \<string\> **optional**: If defined it sets the http method for `onUrl` and `offUrl`. 
-This property is deprecated and only present for backwards compatibility. It is recommended to use an 
-[[urlObject](#urlobject)] to set the http method per url.
-* `auth` \<object\> **optional**: If your http server uses basic authentication you can specify your credential in this 
+(and other properties when using an urlObject) to query the current state from the switch. By default it expects the http 
+server to return **'1'** for ON and **'0'** for OFF leaving out any html markup.  
+You can change this using `statusPattern` option.
+
+- `statusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `statusUrl`.
+When matching the status of the switch is set to ON otherwise OFF. [Some examples](#examples-for-custom-statuspatterns).
+- `auth` \<object\> **optional**: If your http server uses basic authentication you can specify your credential in this 
 object. It uses those credentials for all http requests and thus overrides all possibly specified credentials inside 
 an urlObject for `onUrl`, `offUrl` and `statusUrl`.  
 The object must contain the following properties:
     * `username` \<string\>
     * `password` \<string\>
+- `httpMethod` _**deprecated**_ \<string\> **optional**: If defined it sets the http method for `onUrl` and `offUrl`. 
+This property is deprecated and only present for backwards compatibility. It is recommended to use an 
+[[urlObject](#urlobject)] to set the http method per url.
+
 * `timeout` \<integer\> **optional** \(Default: **1000**\): When using a stateless switch this timeout in 
 **milliseconds** specifies the time after which the switch is reset back to its original state.
 * `pullInterval` \<integer\> **optional**: The property expects an interval in **milliseconds** in which the plugin 
 pulls updates from your http device. For more information read [pulling updates](#the-pull-way).  
 (This option is only supported when `switchType` is **"stateful"**)
-* `debug` \<boolean\> **optional**: If set to true debug mode is enabled and the plugin prints more detailed information.
+
+- `debug` \<boolean\> **optional**: If set to true debug mode is enabled and the plugin prints more detailed information.
 
 Below are two example configurations. One is using simple string urls and the other is using simple urlObjects.  
 Both configs can be used for a basic plugin configuration.
@@ -152,7 +159,7 @@ Below is an example of an urlObject containing all properties:
 }
 ```
 
-## Stateless Switch
+### Stateless Switch
 
 Since **OFF** is the only possible state you do not need to declare `offUrl` and `statusUrl`
 
@@ -173,7 +180,7 @@ Since **OFF** is the only possible state you do not need to declare `offUrl` and
 }  
 ```
 
-## Reverse Stateless Switch
+### Reverse Stateless Switch
 
 Since **ON** is the only possible state you do not need to declare `onUrl` and `statusUrl`
 
@@ -194,7 +201,7 @@ Since **ON** is the only possible state you do not need to declare `onUrl` and `
 }
 ```
 
-## Multiple On or Off Urls
+### Multiple On or Off Urls
 If you wish to do so you can specify an array of urls or urlObjects (`onUrl` or `offUrl`) when your switch is a 
 **stateless switch** or a **reverse-stateless switch**.  
 **This is not possible with a normal stateful switch.**
@@ -242,6 +249,36 @@ One is using simple string array and the other is using simple urlObject arrays.
     ]
 }
 ```
+
+### Examples for custom statusPatterns
+
+The `statusPattern` property can be used to change the phrase which is used to identify if the switch should be turned on 
+or off. So when you want the switch to be turned on when your server sends **"true"** in the body of the http response you
+could specify the following pattern:
+```json
+{
+    "statusPattern": "true"
+}
+```
+
+<br>
+
+However using Regular Expressions much more complex patterns are possible. Let's assume your http enabled device responds 
+with the following json string as body, where one property has an random value an the other indicates the status of the 
+switch:
+```json
+{
+    "perRequestRandomValue": 89723789,
+    "switchState": true
+}
+```
+Then you could use the following pattern:
+```json
+{
+    "statusPattern": "{\n    \"perRequestRandomValue\": [0-9]+,\n    \"switchState\": true\n}"
+}
+```
+More on how to build regex patterns: https://www.w3schools.com/jsref/jsref_obj_regexp.asp
 
 ## Notification Server
 

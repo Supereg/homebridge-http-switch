@@ -37,6 +37,17 @@ function HTTP_SWITCH(log, config) {
         this.timeout = 1000;
     }
 
+    if (this.switchType === SwitchType.STATEFUL) {
+        this.statusPattern = /1/;
+
+        if (config.statusPattern) {
+            if (typeof config.statusPattern === "string")
+                this.statusPattern = new RegExp(config.statusPattern);
+            else
+                this.log.warn("Property 'statusPattern' was given in an unsupported type. Using default one!");
+        }
+    }
+
     const success = this.parseUrls(config); // parsing 'onUrl', 'offUrl', 'statusUrl'
     if (!success) {
         this.log.warn("Aborting...");
@@ -235,7 +246,7 @@ HTTP_SWITCH.prototype = {
                         if (this.debug)
                             this.log(`Body of status response is: '${body}'`);
 
-                        const switchedOn = parseInt(body) > 0; // TODO support regex parsing
+                        const switchedOn = this.statusPattern.test(body);
                         this.log("Switch is currently %s", switchedOn? "ON": "OFF");
                         callback(null, switchedOn);
                     }
