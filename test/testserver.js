@@ -46,6 +46,8 @@ TestServer.prototype.handleHTTPCall = function (request, response) {
             response.writeHead(200, {'Content-Type': "text/html"});
             response.write(value? "1": "0");
             response.end();
+
+            value = !value;
             break;
         case "on":
             value = true;
