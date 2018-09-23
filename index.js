@@ -332,9 +332,11 @@ HTTP_SWITCH.prototype = {
             if (errors.length > 0) {
                 if (successes.length === 0) {
                     if (errors.length === 1) {
-                        this.log(`Error occurred setting state of switch: ${errors[0].message}`);
-                        this.log(errors[0]);
-                        // one single url => returned error
+                        const errorMessage = errors[0].error.message;
+                        this.log(`Error occurred setting state of switch: ${errorMessage}`);
+
+                        if (errorMessage && !errorMessage.startsWith("HTTP request returned with error code "))
+                            this.log(errors[0].error);
                     }
                     else {
                         this.log(`Error occurred setting state of switch with every request (${errors.length}):`);
