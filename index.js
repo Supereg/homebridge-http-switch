@@ -332,7 +332,8 @@ HTTP_SWITCH.prototype = {
             if (errors.length > 0) {
                 if (successes.length === 0) {
                     if (errors.length === 1) {
-                        this.log(`Error occurred setting state of switch: ${errors[0].message}`)
+                        this.log(`Error occurred setting state of switch: ${errors[0].message}`);
+                        this.log(errors[0]);
                         // one single url => returned error
                     }
                     else {
