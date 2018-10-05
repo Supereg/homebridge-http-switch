@@ -134,6 +134,9 @@ A urlObject can have the following properties:
 * `url` \<string\> **required**: Defines the url pointing to your http server
 * `method` \<string\> **optional** \(Default: **"GET"**\): Defines the http method used to make the http request
 * `body` \<string\> **optional**: Defines the body sent with the http request
+* `strictSSL` \<boolean\> **optional** \(Default: **false**\): If enabled the SSL certificate used must be valid and 
+the whole certificate chain must be trusted. The default is false because most people will work with self signed 
+certificates in their homes and their devices are already authorized since being in their networks.
 * `auth` \<object\> **optional**: If your http server uses basic authentication you can specify your credential in this 
 object. When defined the object must contain the following properties:
     * `username` \<string\>
@@ -147,6 +150,8 @@ Below is an example of an urlObject containing all properties:
   "url": "http://example.com:8080",
   "method": "GET",
   "body": "exampleBody",
+  
+  "strictSSL": false,
   
   "auth": {
     "username": "yourUsername",
