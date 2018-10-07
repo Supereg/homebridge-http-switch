@@ -125,9 +125,15 @@ function HTTP_SWITCH(log, config) {
             this.log("'pullInterval' was specified, however switch is stateless. Ignoring property and not enabling pull updates!");
     }
 
-    /** @namespace config.notificationPassword */
-    /** @namespace config.notificationID */
-    notifications.enqueueNotificationRegistrationIfDefined(api, log, config.notificationID, config.notificationPassword, this.handleNotification.bind(this));
+    if (config.notificationID) {
+        if (this.switchType === SwitchType.STATEFUL) {
+            /** @namespace config.notificationPassword */
+            /** @namespace config.notificationID */
+            notifications.enqueueNotificationRegistrationIfDefined(api, log, config.notificationID, config.notificationPassword, this.handleNotification.bind(this));
+        }
+        else
+            this.log("'notificationID' was specified, however switch is stateless. Ignoring property and not enabling notifications!");
+    }
     this.log("Switch successfully configured...");
 }
 
