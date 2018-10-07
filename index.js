@@ -32,6 +32,18 @@ function HTTP_SWITCH(log, config) {
     this.switchType = config.switchType || SwitchType.STATEFUL;
     this.switchType.toLowerCase();
 
+    let validSwitchType = false;
+    Object.keys(SwitchType).forEach(key => {
+        const value = SwitchType[key];
+
+        if (this.switchType === value)
+            validSwitchType = true;
+    });
+    if (!validSwitchType) {
+        this.log.warn(`'${this.switchType}' is a invalid switchType! Aborting...`);
+        return;
+    }
+
     this.timeout = config.timeout || 1000;
     if (typeof this.timeout !== 'number') {
         this.timeout = 1000;
