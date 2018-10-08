@@ -50,6 +50,9 @@ The configuration can contain the following properties:
     Configuration example is further [down](#stateless-switch).
     * **"stateless-reverse"**: Default position is ON. If you switch it to off, it immediately goes back to on. 
     Configuration example is further [down](#reverse-stateless-switch).
+    * **"toggle"**: The toggle switch is a stateful switch however does not use the `statusUrl` to determine the current 
+    state. It uses the last set state as the current state. Default position is OFF.
+    * **"toggle-reverse""**: Same as **"toggle"** but switch default position is ON.
 
 * `onUrl` \<string | \[string\] | [urlObject](#urlobject) | [[urlObject](#urlobject)]\> **required**: Defines the url 
 (and other properties when using an urlObject) which is called when you turn on the switch.

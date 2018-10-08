@@ -21,7 +21,9 @@ module.exports = function (homebridge) {
 const SwitchType = Object.freeze({
     STATEFUL: "stateful",
     STATELESS: "stateless",
-    STATELESS_REVERSE: "stateless-reverse"
+    STATELESS_REVERSE: "stateless-reverse",
+    TOGGLE: "toggle",
+    TOGGLE_REVERSE: "toggle-reverse",
 });
 
 function HTTP_SWITCH(log, config) {
@@ -30,7 +32,7 @@ function HTTP_SWITCH(log, config) {
     this.debug = config.debug || false;
 
     this.switchType = config.switchType || SwitchType.STATEFUL;
-    this.switchType.toLowerCase();
+    this.switchType = this.switchType.toLowerCase();
 
     let validSwitchType = false;
     Object.keys(SwitchType).forEach(key => {
@@ -58,6 +60,13 @@ function HTTP_SWITCH(log, config) {
             else
                 this.log.warn("Property 'statusPattern' was given in an unsupported type. Using default one!");
         }
+    }
+
+    if (this.switchType === SwitchType.TOGGLE) {
+        this.toggleSwitchState = false;
+    }
+    else if (this.switchType === SwitchType.TOGGLE_REVERSE) {
+        this.toggleSwitchState = true;
     }
 
     const success = this.parseUrls(config); // parsing 'onUrl', 'offUrl', 'statusUrl'
@@ -126,7 +135,8 @@ function HTTP_SWITCH(log, config) {
     }
 
     if (config.notificationID) {
-        if (this.switchType === SwitchType.STATEFUL) {
+        if (this.switchType === SwitchType.STATEFUL
+            || this.switchType === SwitchType.TOGGLE || this.switchType === SwitchType.TOGGLE_REVERSE) {
             /** @namespace config.notificationPassword */
             /** @namespace config.notificationID */
             notifications.enqueueNotificationRegistrationIfDefined(api, log, config.notificationID, config.notificationPassword, this.handleNotification.bind(this));
@@ -141,7 +151,7 @@ HTTP_SWITCH.prototype = {
 
     parseUrls: function (config) {
         /** @namespace config.onUrl */
-        if (this.switchType === SwitchType.STATEFUL || this.switchType === SwitchType.STATELESS) {
+        if (this.switchType !== SwitchType.STATELESS_REVERSE) {
             if (config.onUrl) {
                 try {
                     this.on = this.switchType === SwitchType.STATEFUL
@@ -157,11 +167,11 @@ HTTP_SWITCH.prototype = {
                 return false;
             }
         }
-        else if (this.switchType === SwitchType.STATELESS_REVERSE && config.onUrl)
+        else if (config.onUrl)
             this.log.warn(`Property 'onUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
 
         /** @namespace config.offUrl */
-        if (this.switchType === SwitchType.STATEFUL || this.switchType === SwitchType.STATELESS_REVERSE) {
+        if (this.switchType !== SwitchType.STATELESS) {
             if (config.offUrl) {
                 try {
                     this.off = this.switchType === SwitchType.STATEFUL
@@ -177,7 +187,7 @@ HTTP_SWITCH.prototype = {
                 return false;
             }
         }
-        else if (this.switchType === SwitchType.STATELESS && config.offUrl)
+        else if (config.offUrl)
             this.log.warn(`Property 'offUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
 
         if (this.switchType === SwitchType.STATEFUL) {
@@ -276,6 +286,10 @@ HTTP_SWITCH.prototype = {
             case SwitchType.STATELESS_REVERSE:
                 callback(null, true);
                 break;
+            case SwitchType.TOGGLE || SwitchType.TOGGLE_REVERSE:
+                callback(null, this.toggleSwitchState);
+                break;
+
             default:
                 callback(new Error("Unrecognized switch type"));
                 break;
@@ -311,6 +325,14 @@ HTTP_SWITCH.prototype = {
                 }
 
                 this._makeSetRequest(false, callback);
+                break;
+            case SwitchType.TOGGLE || SwitchType.TOGGLE_REVERSE:
+                this._makeSetRequest(on, error => {
+                    if (!error)
+                        this.toggleSwitchState = on;
+
+                    callback(error);
+                });
                 break;
 
             default:
