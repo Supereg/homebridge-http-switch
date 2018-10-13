@@ -43,6 +43,9 @@ How to implement the protocol into your http device can be read in the chapter [
 ## Configuration:
 
 The configuration can contain the following properties:
+
+#### Basic configuration options:
+
 - `name` \<string\> **required**: Defines the name which is later displayed in HomeKit
 - `switchType` \<string\> **optional** \(Default: **"stateful"**\): Defines the type of the switch:
     * **"stateful"**: A normal switch and thus the default value.
@@ -61,7 +64,9 @@ The configuration can contain the following properties:
 * `statusUrl` \<string | [urlObject](#urlobject)\> **required**: Defines the url 
 (and other properties when using an urlObject) to query the current state from the switch. By default it expects the http 
 server to return **'1'** for ON and **'0'** for OFF leaving out any html markup.  
-You can change this using `statusPattern` option.
+You can change this using `statusPattern` option.  
+
+#### Advanced configuration options:
 
 - `statusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `statusUrl`.
 When matching the status of the switch is set to ON otherwise OFF. [Some examples](#examples-for-custom-statuspatterns).
