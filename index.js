@@ -62,6 +62,14 @@ function HTTP_SWITCH(log, config) {
         }
     }
 
+    /** @namespace config.multipleUrlExecutionStrategy */
+    if (config.multipleUrlExecutionStrategy) {
+        const result = http.setMultipleUrlExecutionStrategy(config.multipleUrlExecutionStrategy);
+
+        if (!result)
+            this.log.warn("'multipleUrlExecutionStrategy' has an invalid value (" + config.multipleUrlExecutionStrategy + "). Continuing with defaults!");
+    }
+
     if (this.switchType === SwitchType.TOGGLE) {
         this.toggleSwitchState = false;
     }

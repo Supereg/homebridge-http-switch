@@ -86,7 +86,13 @@ This property is deprecated and only present for backwards compatibility. It is 
 pulls updates from your http device. For more information read [pulling updates](#the-pull-way).  
 (This option is only supported when `switchType` is **"stateful"**)
 
-- `debug` \<boolean\> **optional**: If set to true debug mode is enabled and the plugin prints more detailed information.
+- `multipleUrlExecutionStrategy` \<string\> **optional** \(Default: **"parallel"**\): Defines the strategy used when 
+executing multiple urls. The following are available:
+    - **"parallel"**: All urls are executed in parallel. No particular order is guaranteed. Execution as fast as possible.
+    - **"series"**: All urls are executed in the given order. Each url must complete first before the next one is executed.  
+    When using series execution you can also have a look at the [delay url](#the-delay-url).
+
+* `debug` \<boolean\> **optional**: If set to true debug mode is enabled and the plugin prints more detailed information.
 
 Below are two example configurations. One is using simple string urls and the other is using simple urlObjects.  
 Both configs can be used for a basic plugin configuration.
@@ -257,6 +263,33 @@ One is using simple string array and the other is using simple urlObject arrays.
             {
               "url": "http://localhost/api/switch3On"
             }
+          ]
+        }   
+    ]
+}
+```
+
+#### The 'delay(...)' url
+
+When using multiple urls and **"series"** as `multipleUrlExecutionStrategy` you can also specify so called delay urls in the 
+`onUrl` or `offUrl` arrays. This could be used to guarantee a certain delay between two urls.  
+The delay url has the following pattern: **"delay(INTEGER)"** where 'INTEGER' is replaced with the delay in milliseconds.
+
+Here is an example:
+```json
+{
+    "accessories": [
+        {
+          "accessory": "HTTP-SWITCH",
+          "name": "Delayed Switch",
+          
+          "switchType": "stateless",
+          "multipleUrlExecutionStrategy": "series",
+          
+          "onUrl": [
+            "http://localhost/api/switch1On",
+            "delay(1000)",
+            "http://localhost/api/switch2On"
           ]
         }   
     ]
