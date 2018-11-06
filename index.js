@@ -106,17 +106,26 @@ function HTTP_SWITCH(log, config) {
                 this.on.forEach(urlObject => {
                     urlObject.auth.username = config.auth.username;
                     urlObject.auth.password = config.auth.password;
+
+                    if (config.auth.sendImmediately)
+                        urlObject.auth.sendImmediately = config.auth.sendImmediately;
                 });
             }
             if (this.off) {
                 this.off.forEach(urlObject => {
                     urlObject.auth.username = config.auth.username;
                     urlObject.auth.password = config.auth.password;
+
+                    if (config.auth.sendImmediately)
+                        urlObject.auth.sendImmediately = config.auth.sendImmediately;
                 });
             }
             if (this.status) {
                 this.status.auth.username = config.auth.username;
                 this.status.auth.password = config.auth.password;
+
+                if (config.auth.sendImmediately)
+                    this.status.auth.sendImmediately = config.auth.sendImmediately;
             }
         }
     }

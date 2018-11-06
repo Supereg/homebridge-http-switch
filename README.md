@@ -70,12 +70,17 @@ You can change this using `statusPattern` option.
 
 - `statusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `statusUrl`.
 When matching the status of the switch is set to ON otherwise OFF. [Some examples](#examples-for-custom-statuspatterns).
-- `auth` \<object\> **optional**: If your http server uses basic authentication you can specify your credential in this 
+- `auth` \<object\> **optional**: If your http server requires authentication you can specify your credential in this 
 object. It uses those credentials for all http requests and thus overrides all possibly specified credentials inside 
 an urlObject for `onUrl`, `offUrl` and `statusUrl`.  
-The object must contain the following properties:
-    * `username` \<string\>
-    * `password` \<string\>
+The object can contain the following properties:
+    * `username` \<string\> **required**
+    * `password` \<string\> **required**
+    * `sendImmediately` \<boolean\> **optional** \(Default: **true**\): When set to **true** the plugin will send the 
+        credentials immediately to the http server. This is best practice for basic authentication.  
+        When set to **false** the plugin will send the proper authentication header after receiving an 401 error code 
+        (unauthenticated). The response must include a proper `WWW-Authenticate` header.  
+        Digest authentication requires this property to be set to **false**!
 - `httpMethod` _**deprecated**_ \<string\> **optional**: If defined it sets the http method for `onUrl` and `offUrl`. 
 This property is deprecated and only present for backwards compatibility. It is recommended to use an 
 [[urlObject](#urlobject)] to set the http method per url.
@@ -151,10 +156,15 @@ A urlObject can have the following properties:
 * `strictSSL` \<boolean\> **optional** \(Default: **false**\): If enabled the SSL certificate used must be valid and 
 the whole certificate chain must be trusted. The default is false because most people will work with self signed 
 certificates in their homes and their devices are already authorized since being in their networks.
-* `auth` \<object\> **optional**: If your http server uses basic authentication you can specify your credential in this 
-object. When defined the object must contain the following properties:
-    * `username` \<string\>
-    * `password` \<string\>
+* `auth` \<object\> **optional**: If your http server requires authentication you can specify your credential in this 
+object. When defined the object can contain the following properties:
+    * `username` \<string\> **required**
+    * `password` \<string\> **required**
+    * `sendImmediately` \<boolean\> **optional** \(Default: **true**\): When set to **true** the plugin will send the 
+            credentials immediately to the http server. This is best practice for basic authentication.  
+            When set to **false** the plugin will send the proper authentication header after receiving an 401 error code 
+            (unauthenticated). The response must include a proper `WWW-Authenticate` header.  
+            Digest authentication requires this property to be set to **false**!
 * `headers` \<object\> **optional**: Using this object you can define any http headers which are sent with the http 
 request. The object must contain only string key value pairs.  
   
