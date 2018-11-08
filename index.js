@@ -107,7 +107,7 @@ function HTTP_SWITCH(log, config) {
                     urlObject.auth.username = config.auth.username;
                     urlObject.auth.password = config.auth.password;
 
-                    if (config.auth.sendImmediately)
+                    if (typeof config.auth.sendImmediately === "boolean")
                         urlObject.auth.sendImmediately = config.auth.sendImmediately;
                 });
             }
@@ -116,7 +116,7 @@ function HTTP_SWITCH(log, config) {
                     urlObject.auth.username = config.auth.username;
                     urlObject.auth.password = config.auth.password;
 
-                    if (config.auth.sendImmediately)
+                    if (typeof config.auth.sendImmediately === "boolean")
                         urlObject.auth.sendImmediately = config.auth.sendImmediately;
                 });
             }
@@ -124,7 +124,7 @@ function HTTP_SWITCH(log, config) {
                 this.status.auth.username = config.auth.username;
                 this.status.auth.password = config.auth.password;
 
-                if (config.auth.sendImmediately)
+                if (typeof config.auth.sendImmediately === "boolean")
                     this.status.auth.sendImmediately = config.auth.sendImmediately;
             }
         }
