@@ -292,7 +292,9 @@ HTTP_SWITCH.prototype = {
                             this.log(`Body of status response is: '${body}'`);
 
                         const switchedOn = this.statusPattern.test(body);
-                        this.log("Switch is currently %s", switchedOn? "ON": "OFF");
+                        if (this.debug)
+                            this.log("Switch is currently %s", switchedOn? "ON": "OFF");
+
                         callback(null, switchedOn);
                     }
                 });
