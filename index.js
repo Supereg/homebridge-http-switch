@@ -162,6 +162,31 @@ function HTTP_SWITCH(log, config) {
             this.log("'notificationID' was specified, however switch is stateless. Ignoring property and not enabling notifications!");
     }
     this.log("Switch successfully configured...");
+    if (this.debug) {
+        this.log("Switch started with the following options: ");
+        this.log("  - switchType: " + this.switchType);
+        if (this.switchType === SwitchType.STATEFUL)
+            this.log("  - statusPattern: " + this.statusPattern);
+
+        if (this.auth)
+            this.log("  - auth options: " + JSON.stringify(this.auth));
+
+        if (this.on)
+            this.log("  - onUrls: " + JSON.stringify(this.on));
+        if (this.off)
+            this.log("  - offUrls: " + JSON.stringify(this.off));
+        if (this.status)
+            this.log("  - statusUrl: " + JSON.stringify(this.status));
+
+        if (this.switchType === SwitchType.STATELESS || this.switchType === SwitchType.STATELESS_REVERSE)
+            this.log("  - timeout for stateless switch: " + this.timeout);
+
+        if (this.pullTimer)
+            this.log("  - pullTimer started with interval " + config.pullInterval);
+
+        if (config.notificationID)
+            this.log("  - notificationsID specified: " + config.notificationID);
+    }
 }
 
 HTTP_SWITCH.prototype = {
@@ -377,7 +402,8 @@ HTTP_SWITCH.prototype = {
                 else if (result.response.statusCode !== 200) {
                     errors.push({
                         index: i,
-                        error: new Error(`HTTP request returned with error code ${result.response.statusCode}`)
+                        error: new Error(`HTTP request returned with error code ${result.response.statusCode}`),
+                        value: result.body
                     });
                 }
                 else {
@@ -391,11 +417,14 @@ HTTP_SWITCH.prototype = {
             if (errors.length > 0) {
                 if (successes.length === 0) {
                     if (errors.length === 1) {
-                        const errorMessage = errors[0].error.message;
+                        const errorObject = errors[0];
+                        const errorMessage = errorObject.error.message;
                         this.log(`Error occurred setting state of switch: ${errorMessage}`);
 
                         if (errorMessage && !errorMessage.startsWith("HTTP request returned with error code "))
-                            this.log(errors[0].error);
+                            this.log(errorObject.error);
+                        else if (errorObject.value && this.debug)
+                            this.log("Body of set response is: " + errorObject.value);
                     }
                     else {
                         this.log(`Error occurred setting state of switch with every request (${errors.length}):`);
