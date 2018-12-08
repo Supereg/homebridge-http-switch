@@ -142,8 +142,7 @@ function HTTP_SWITCH(log, config) {
     if (config.pullInterval) {
         if (this.switchType === SwitchType.STATEFUL) {
             this.pullTimer = new PullTimer(this.log, config.pullInterval, this.getStatus.bind(this), value => {
-                this.ignoreNextSet = true;
-                this.homebridgeService.setCharacteristic(Characteristic.On, value);
+                this.homebridgeService.getCharacteristic(Characteristic.On).updateValue(value);
             });
             this.pullTimer.start();
         }
@@ -293,8 +292,7 @@ HTTP_SWITCH.prototype = {
         if (this.pullTimer)
             this.pullTimer.resetTimer();
 
-        this.ignoreNextSet = true;
-        this.homebridgeService.setCharacteristic(characteristic, value);
+        this.homebridgeService.getCharacteristic(characteristic).updateValue(value);
     },
 
     getStatus: function (callback) {
@@ -341,12 +339,6 @@ HTTP_SWITCH.prototype = {
     },
 
     setStatus: function (on, callback) {
-        if (this.ignoreNextSet) {
-            this.ignoreNextSet = false;
-            callback();
-            return;
-        }
-
         if (this.pullTimer)
             this.pullTimer.resetTimer();
 
