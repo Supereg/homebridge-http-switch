@@ -233,7 +233,7 @@ A mqttObject can have the following properties:
 * `protocol` \<string\> **optional** \(Default: **"mqtt"**\): Defines protocol used to connect to the mqtt broker
 * `qos` \<number\> **optional** \(Default: **1**\): Defines the Quality of Service (Notice, the QoS of the publisher 
            must also be configured accordingly).  
-           In contrast to most implementation the default value is **1**.
+           In contrast to most implementations the default value is **1**.
     * `0`: 'At most once' - the message is sent only once and the client and broker take no additional steps to 
                             acknowledge delivery (fire and forget).
     * `1`: 'At least once' - the message is re-tried by the sender multiple times until acknowledgement is 
