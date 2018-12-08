@@ -6,6 +6,7 @@ const http = require("homebridge-http-base").http;
 const configParser = require("homebridge-http-base").configParser;
 const PullTimer = require("homebridge-http-base").PullTimer;
 const notifications = require("homebridge-http-base").notifications;
+const MQTTClient = require("homebridge-http-base").MQTTClient;
 
 const packageJSON = require('./package.json');
 
@@ -160,6 +161,26 @@ function HTTP_SWITCH(log, config) {
         else
             this.log("'notificationID' was specified, however switch is stateless. Ignoring property and not enabling notifications!");
     }
+
+    if (config.mqtt) {
+        let options;
+        try {
+            options = configParser.parseMQTTOptions(config.mqtt)
+        } catch (error) {
+            this.log.error("Error occurred while parsing MQTT property: " + error.message);
+            this.log.error("MQTT will not be enabled!");
+        }
+
+        if (options) {
+            try {
+                this.mqttClient = new MQTTClient(this.homebridgeService, options, this.log);
+                this.mqttClient.connect();
+            } catch (error) {
+                this.log.error("Error occurred creating mqtt client: " + error.message);
+            }
+        }
+    }
+
     this.log("Switch successfully configured...");
     if (this.debug) {
         this.log("Switch started with the following options: ");
@@ -185,6 +206,19 @@ function HTTP_SWITCH(log, config) {
 
         if (config.notificationID)
             this.log("  - notificationsID specified: " + config.notificationID);
+
+        if (this.mqttClient) {
+            const options = this.mqttClient.mqttOptions;
+            this.log(`  - mqtt client instantiated: ${options.protocol}://${options.host}:${options.port}`);
+            this.log("     -> subscribing to topics:");
+
+            for (const topic in this.mqttClient.subscriptions) {
+                if (!this.mqttClient.subscriptions.hasOwnProperty(topic))
+                    continue;
+
+                this.log(`         - ${topic}`);
+            }
+        }
     }
 }
 
