@@ -163,22 +163,27 @@ function HTTP_SWITCH(log, config) {
     }
 
     if (config.mqtt) {
-        let options;
-        try {
-            options = configParser.parseMQTTOptions(config.mqtt)
-        } catch (error) {
-            this.log.error("Error occurred while parsing MQTT property: " + error.message);
-            this.log.error("MQTT will not be enabled!");
-        }
-
-        if (options) {
+        if (this.switchType === SwitchType.STATEFUL
+            || this.switchType === SwitchType.TOGGLE || this.switchType === SwitchType.TOGGLE_REVERSE) {
+            let options;
             try {
-                this.mqttClient = new MQTTClient(this.homebridgeService, options, this.log);
-                this.mqttClient.connect();
+                options = configParser.parseMQTTOptions(config.mqtt)
             } catch (error) {
-                this.log.error("Error occurred creating mqtt client: " + error.message);
+                this.log.error("Error occurred while parsing MQTT property: " + error.message);
+                this.log.error("MQTT will not be enabled!");
+            }
+
+            if (options) {
+                try {
+                    this.mqttClient = new MQTTClient(this.homebridgeService, options, this.log);
+                    this.mqttClient.connect();
+                } catch (error) {
+                    this.log.error("Error occurred creating mqtt client: " + error.message);
+                }
             }
         }
+        else
+            this.log("'mqtt' options were specified, however switch is stateless. Ignoring it!");
     }
 
     this.log("Switch successfully configured...");
