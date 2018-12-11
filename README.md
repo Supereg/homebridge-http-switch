@@ -243,7 +243,7 @@ A mqttObject can have the following properties:
 * `clientId` \<string\> **optional** \(Default: `'mqttjs_' + Math.random().toString(16).substr(2, 8)`\): Defines clientId
 * `keepalive` \<number\> **optional** \(Default: **60**\): Time in seconds to send a keepalive. Set to 0 to disable.
 * `clean` \<boolean\> **optional** \(Default: **true**\): Set to false to receive QoS 1 and 2 messages while offline.
-* `reconnectPreiod` \<number\> **optional** \(Default: **1000**\): Time in milliseconds after which a reconnect is tried.
+* `reconnectPeriod` \<number\> **optional** \(Default: **1000**\): Time in milliseconds after which a reconnect is tried.
 * `connectTimeout` \<number\> **optional** \(Default: **30000**\): Time in milliseconds the client waits until the 
         CONNECT needs to be acknowledged (CONNACK).
 
