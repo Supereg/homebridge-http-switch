@@ -26,13 +26,13 @@ sudo npm install -g homebridge-http-switch
 The _'On'_ characteristic from the _'switch'_ service has the permission to `notify` the HomeKit controller of state 
 changes. `homebridge-http-switch` supports two ways to send state changes to HomeKit.
 
-#### The 'pull' way:
+### The 'pull' way:
 
 The 'pull' way is probably the easiest to set up and supported in every scenario. `homebridge-http-switch` requests the 
 state of the switch in an specified interval (pulling) and sends the value to HomeKit.  
 Look for `pullInterval` in the list of configuration options if you want to configure it.
 
-#### The 'push' way:
+### The 'push' way:
 
 When using the 'push' concept, the http device itself sends the updated value to `homebridge-http-switch` whenever 
 the value changes. This is more efficient as the new value is updated instantly and `homebridge-http-switch` does not 
@@ -40,7 +40,7 @@ need to make needless requests when the value didn't actually change.
 However because the http device needs to actively notify the `homebridge-http-switch` there is more work needed 
 to implement this method into your http device. 
 
-##### Using MQTT:
+#### Using MQTT:
 
 MQTT (Message Queuing Telemetry Transport) is a protocol widely used by IoT devices. IoT devices can publish messages
 on a certain topic to the MQTT broker which then sends this message to all clients subscribed to the specified topic.
@@ -49,7 +49,7 @@ open source MQTT broker running perfectly on a device like the Raspberry Pi) and
 publish/subscribe to it.  
 For [shelly.cloud](https://shelly.cloud) devices mqtt is the best and only option to implement push-updates.
 
-##### Using 'homebridge-http-notification-server':
+#### Using 'homebridge-http-notification-server':
 
 For those of you who are developing the http device by themselves I developed a pretty simple 'protocol' based on http 
 to send push-updates.   
