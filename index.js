@@ -55,11 +55,20 @@ function HTTP_SWITCH(log, config) {
     if (this.switchType === SwitchType.STATEFUL) {
         this.statusPattern = /1/;
 
+        this.statusCache = 0; // default is no caching
+        this.statusLastQueried = 0; // first query should not be cached
+
         if (config.statusPattern) {
             if (typeof config.statusPattern === "string")
                 this.statusPattern = new RegExp(config.statusPattern);
             else
                 this.log.warn("Property 'statusPattern' was given in an unsupported type. Using default one!");
+        }
+        if (config.statusCache) {
+            if (typeof config.statusCache === "number")
+                this.statusCache = config.statusCache;
+            else
+                this.log.warn("Property 'statusCache' was given in an unsupported type. Using default one!");
         }
     }
 
@@ -340,6 +349,25 @@ HTTP_SWITCH.prototype = {
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:
+                if (this.statusCache < 0) {
+                    const value = this.homebridgeService.getCharacteristic(Characteristic.On).value;
+                    if (this.debug)
+                        this.log(`getStatus(): returning cached value '${value? "ON": "OFF"}' (infinite cache)`);
+
+                    callback(null, value); // returning current value
+                    break;
+                }
+
+                const timeSinceLastQuery = new Date().getTime() - this.statusLastQueried;
+                if (timeSinceLastQuery <= this.statusCache) {
+                    const value = this.homebridgeService.getCharacteristic(Characteristic.On).value;
+                    if (this.debug)
+                        this.log(`getStatus(): returning cached value '${value? "ON": "OFF"}'`);
+
+                    callback(null, value); // returning current value
+                    break;
+                }
+
                 http.httpRequest(this.status, (error, response, body) => {
                     if (error) {
                         this.log("getStatus() failed: %s", error.message);
@@ -356,6 +384,8 @@ HTTP_SWITCH.prototype = {
                         const switchedOn = this.statusPattern.test(body);
                         if (this.debug)
                             this.log("Switch is currently %s", switchedOn? "ON": "OFF");
+
+                        this.statusLastQueried = new Date().getTime(); // we only update statusLastQueried on successful query
 
                         callback(null, switchedOn);
                     }

@@ -86,6 +86,9 @@ You can change this using `statusPattern` option.
 
 - `statusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `statusUrl`.
 When matching the status of the switch is set to ON otherwise OFF. [Some examples](#examples-for-custom-statuspatterns).
+- `statusCache` \<number\> **optional** \(Default: **0**\): Defines the amount of time in milliseconds a queried state 
+ of the switch is cached before a new request is made to the http device.  
+ Default is **0** which indicates no caching. A value of **-1** will indicate infinite caching. 
 - `auth` \<object\> **optional**: If your http server requires authentication you can specify your credential in this 
 object. It uses those credentials for all http requests and thus overrides all possibly specified credentials inside 
 an urlObject for `onUrl`, `offUrl` and `statusUrl`.  
