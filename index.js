@@ -368,18 +368,21 @@ HTTP_SWITCH.prototype = {
                     break;
                 }
 
+                if (this.debug)
+                    this.log("getStatus() doing http request...");
+
                 http.httpRequest(this.status, (error, response, body) => {
                     if (error) {
                         this.log("getStatus() failed: %s", error.message);
                         callback(error);
                     }
-                    else if (response.statusCode !== 200) {
+                    else if (Math.floor(response.statusCode / 100) !== 2) { // all 2xx statusCodes represent success
                         this.log("getStatus() http request returned http error code: %s", response.statusCode);
                         callback(new Error("Got html error code " + response.statusCode));
                     }
                     else {
                         if (this.debug)
-                            this.log(`Body of status response is: '${body}'`);
+                            this.log(`getStatus() request returned successfully (${response.statusCode}). Body: '${body}'`);
 
                         const switchedOn = this.statusPattern.test(body);
                         if (this.debug)
@@ -449,6 +452,9 @@ HTTP_SWITCH.prototype = {
     _makeSetRequest: function (on, callback) {
         const urlObjectArray = on? this.on: this.off;
 
+        if (this.debug)
+            this.log("setStatus() doing http request...");
+
         http.multipleHttpRequests(urlObjectArray, results => {
             const errors = [];
             const successes = [];
@@ -460,7 +466,7 @@ HTTP_SWITCH.prototype = {
                         error: result.error
                     });
                 }
-                else if (result.response.statusCode !== 200) {
+                else if (Math.floor(result.response.statusCode / 100) !== 2) { // all 2xx statusCodes represent success
                     errors.push({
                         index: i,
                         error: new Error(`HTTP request returned with error code ${result.response.statusCode}`),
@@ -500,7 +506,8 @@ HTTP_SWITCH.prototype = {
                 callback(new Error("Some or every request returned with an error. See above!"));
             }
             else {
-                this.log(`Successfully set switch to ${on ? "ON" : "OFF"}${successes.length > 1 ? ` with every request (${successes.length})` : ""}`);
+                if (this.debug)
+                    this.log(`Successfully set switch to ${on ? "ON" : "OFF"}${successes.length > 1 ? ` with every request (${successes.length})` : ""}`);
                 callback();
             }
 
