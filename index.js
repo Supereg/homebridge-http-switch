@@ -110,7 +110,7 @@ function HTTP_SWITCH(log, config) {
 
     if (config.auth) {
         if (!(config.auth.username && config.auth.password))
-            this.log("auth.username' and/or 'auth.password' was not set!");
+            this.log("'auth.username' and/or 'auth.password' was not set!");
         else {
             if (this.on) {
                 this.on.forEach(urlObject => {
