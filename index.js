@@ -2,11 +2,13 @@
 
 let Service, Characteristic, api;
 
-const http = require("homebridge-http-base").http;
-const configParser = require("homebridge-http-base").configParser;
-const PullTimer = require("homebridge-http-base").PullTimer;
-const notifications = require("homebridge-http-base").notifications;
-const MQTTClient = require("homebridge-http-base").MQTTClient;
+const _http_base = require("homebridge-http-base");
+const http = _http_base.http;
+const configParser = _http_base.configParser;
+const PullTimer = _http_base.PullTimer;
+const notifications = _http_base.notifications;
+const MQTTClient = _http_base.MQTTClient;
+const Cache = _http_base.Cache;
 
 const packageJSON = require('./package.json');
 
@@ -54,22 +56,16 @@ function HTTP_SWITCH(log, config) {
 
     if (this.switchType === SwitchType.STATEFUL) {
         this.statusPattern = /1/;
-
-        this.statusCache = 0; // default is no caching
-        this.statusLastQueried = 0; // first query should not be cached
-
         if (config.statusPattern) {
             if (typeof config.statusPattern === "string")
                 this.statusPattern = new RegExp(config.statusPattern);
             else
                 this.log.warn("Property 'statusPattern' was given in an unsupported type. Using default one!");
         }
-        if (config.statusCache) {
-            if (typeof config.statusCache === "number")
-                this.statusCache = config.statusCache;
-            else
-                this.log.warn("Property 'statusCache' was given in an unsupported type. Using default one!");
-        }
+
+        this.statusCache = new Cache(config.statusCache, 0);
+        if (config.statusCache && typeof config.statusCache !== "number")
+            this.log.warn("Property 'statusCache' was given in an unsupported type. Using default one!");
     }
 
     /** @namespace config.multipleUrlExecutionStrategy */
@@ -349,22 +345,11 @@ HTTP_SWITCH.prototype = {
 
         switch (this.switchType) {
             case SwitchType.STATEFUL:
-                if (this.statusCache < 0) {
+                if (!this.statusCache.shouldQuery()) {
                     const value = this.homebridgeService.getCharacteristic(Characteristic.On).value;
                     if (this.debug)
-                        this.log(`getStatus(): returning cached value '${value? "ON": "OFF"}' (infinite cache)`);
-
-                    callback(null, value); // returning current value
-                    break;
-                }
-
-                const timeSinceLastQuery = new Date().getTime() - this.statusLastQueried;
-                if (timeSinceLastQuery <= this.statusCache) {
-                    const value = this.homebridgeService.getCharacteristic(Characteristic.On).value;
-                    if (this.debug)
-                        this.log(`getStatus(): returning cached value '${value? "ON": "OFF"}'`);
-
-                    callback(null, value); // returning current value
+                        this.log(`getStatus() returning cached value '${value? "ON": "OFF"}'${this.statusCache.isInfinite()? " (infinite cache)": ""}`);
+                    callback(null, value);
                     break;
                 }
 
@@ -388,8 +373,7 @@ HTTP_SWITCH.prototype = {
                         if (this.debug)
                             this.log("Switch is currently %s", switchedOn? "ON": "OFF");
 
-                        this.statusLastQueried = new Date().getTime(); // we only update statusLastQueried on successful query
-
+                        this.statusCache.queried(); // we only update lastQueried on successful query
                         callback(null, switchedOn);
                     }
                 });
