@@ -189,6 +189,8 @@ object. When defined the object can contain the following properties:
             Digest authentication requires this property to be set to **false**!
 * `headers` \<object\> **optional**: Using this object you can define any http headers which are sent with the http 
 request. The object must contain only string key value pairs.  
+* `requestTimeout` \<number\> **optional** \(Default: **20000**\): Time in milliseconds specifying timeout (Time to wait
+    for http response and also setting socket timeout).
   
 Below is an example of an urlObject containing all properties:
 ```json
