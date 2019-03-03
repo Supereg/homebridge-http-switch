@@ -9,6 +9,7 @@ const PullTimer = _http_base.PullTimer;
 const notifications = _http_base.notifications;
 const MQTTClient = _http_base.MQTTClient;
 const Cache = _http_base.Cache;
+const utils = _http_base.utils;
 
 const packageJSON = require('./package.json');
 
@@ -34,17 +35,8 @@ function HTTP_SWITCH(log, config) {
     this.name = config.name;
     this.debug = config.debug || false;
 
-    this.switchType = config.switchType || SwitchType.STATEFUL;
-    this.switchType = this.switchType.toLowerCase();
-
-    let validSwitchType = false;
-    Object.keys(SwitchType).forEach(key => {
-        const value = SwitchType[key];
-
-        if (this.switchType === value)
-            validSwitchType = true;
-    });
-    if (!validSwitchType) {
+    this.switchType = utils.enumValueOf(SwitchType, config.switchType, SwitchType.STATEFUL);
+    if (!this.switchType) {
         this.log.warn(`'${this.switchType}' is a invalid switchType! Aborting...`);
         return;
     }
@@ -361,7 +353,7 @@ HTTP_SWITCH.prototype = {
                         this.log("getStatus() failed: %s", error.message);
                         callback(error);
                     }
-                    else if (Math.floor(response.statusCode / 100) !== 2) { // all 2xx statusCodes represent success
+                    else if (http.isHttpSuccessCode(response.statusCode)) {
                         this.log("getStatus() http request returned http error code: %s", response.statusCode);
                         callback(new Error("Got html error code " + response.statusCode));
                     }
@@ -450,7 +442,7 @@ HTTP_SWITCH.prototype = {
                         error: result.error
                     });
                 }
-                else if (Math.floor(result.response.statusCode / 100) !== 2) { // all 2xx statusCodes represent success
+                else if (http.isHttpSuccessCode(result.response.statusCode)) {
                     errors.push({
                         index: i,
                         error: new Error(`HTTP request returned with error code ${result.response.statusCode}`),
