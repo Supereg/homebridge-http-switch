@@ -191,8 +191,17 @@ object. When defined the object can contain the following properties:
 request. The object must contain only string key value pairs.  
 * `requestTimeout` \<number\> **optional** \(Default: **20000**\): Time in milliseconds specifying timeout (Time to wait
     for http response and also setting socket timeout).
+* `repeat` \<number\> **optional** \(Default: **1**\): Defines how often the execution of this urlObject should 
+    be repeated.  
+    Notice that this property only has an effect on ulrObject specified in `onUrl` or `offUrl`.
+    Also have a look at the `multipleUrlExecutionStrategy` property. Using "parallel" execution could result in
+    unpredictable behaviour.
+* `delayBeforeExecution` \<number\> **optional** \(Default: **0**\): Defines the time in milliseconds to wait 
+    before executing the urlObject.  
+    Notice that this property only has an effect on ulrObject specified in `onUrl` or `offUrl`.
+    Also have a look at the `multipleUrlExecutionStrategy` property.
   
-Below is an example of an urlObject containing all properties:
+Below is an example of an urlObject containing the basic properties:
 ```json
 {
   "url": "http://example.com:8080",
