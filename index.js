@@ -353,7 +353,7 @@ HTTP_SWITCH.prototype = {
                         this.log("getStatus() failed: %s", error.message);
                         callback(error);
                     }
-                    else if (http.isHttpSuccessCode(response.statusCode)) {
+                    else if (!http.isHttpSuccessCode(response.statusCode)) {
                         this.log("getStatus() http request returned http error code: %s", response.statusCode);
                         callback(new Error("Got html error code " + response.statusCode));
                     }
@@ -442,7 +442,7 @@ HTTP_SWITCH.prototype = {
                         error: result.error
                     });
                 }
-                else if (http.isHttpSuccessCode(result.response.statusCode)) {
+                else if (!http.isHttpSuccessCode(result.response.statusCode)) {
                     errors.push({
                         index: i,
                         error: new Error(`HTTP request returned with error code ${result.response.statusCode}`),
