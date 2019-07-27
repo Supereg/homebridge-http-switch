@@ -7,7 +7,7 @@
     "homebridge-plugin"
   ],
   "scripts": {
-    "test": "node ./test/init.js"
+    "test": "echo no test defined"
   },
   "repository": {
     "type": "git",
