@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- '7'
+
+deploy:
+  provider: npm
+  email: mail@anderl-bauer.de
+  api_key:
+    secure: RTwfKCcqZ5AUKK98mKb0Ksixx1JH11Q5I9+zfUqZR1tYJN31jML66g7gN5RhhINsNFLeCqstnMRf6kcSJG+C73lNu0kN4t/nVFmIbBj/bSvTtzl9w0Vg12OWiRble817Ocfz5Zx9POcP89pWTA3J13G5BGpZMONE/SK32Nc+T8xQUVNMEKHK5E5kbR7nbruS2TEIpMN32EJxRBotAyUMqj3ZUMHyQ8WbN+msGSZf9P3d+3v7D5qnxm9NBc5CBlHKzZIhHuFD2Fcg6WsKKSQv0nPdrUXg43yxs9plIXD+IFFnSIkp950vnQpHRzpnjXgYD4CfZRyIwMrN+vGmtB/nAq/m1J9cauzWLYiAlUNdr3oooBM0eHksRf2xT68FwrCGDAyg7JRcBEhZsP0SIiIqNheMcrobDPy2fi9m5EekxxP3KdPtG5Xy+yyh3xtgvIcQNs8xZv9vx4RzLk17AqsAZV9l3MGsob+ghQG+a81mKmp5ZhvVUJ5HVd6HoXhLlU7gxqKsC9He7NJV6qN1p2dxFNTUc91/KIbUuYMHbOR/0C1SJx9khGPPdPHAX6xbAN6v6D9ztpbhEGYTaP9o2qNYpdV+g9oXq1TA7V864xRW4CtCkBU+0xNesZMsQXVguMS5LsA9nx6Ivr5pg8BGy043F79daIZ7O0dusNNzbeJuyLQ=
+  on:
+    tags: true
+    repo: Supereg/homebridge-http-switch
