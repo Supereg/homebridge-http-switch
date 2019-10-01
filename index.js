@@ -353,13 +353,17 @@ HTTP_SWITCH.prototype = {
                         this.log("getStatus() failed: %s", error.message);
                         callback(error);
                     }
-                    else if (!http.isHttpSuccessCode(response.statusCode)) {
+                    else if (!(http.isHttpSuccessCode(response.statusCode) || http.isHttpRedirectCode(response.statusCode))) {
                         this.log("getStatus() http request returned http error code: %s", response.statusCode);
                         callback(new Error("Got html error code " + response.statusCode));
                     }
                     else {
                         if (this.debug)
                             this.log(`getStatus() request returned successfully (${response.statusCode}). Body: '${body}'`);
+
+                        if (http.isHttpRedirectCode(response.statusCode)) {
+                            this.log("getStatus() http request return with redirect status code (3xx). Accepting it anyways");
+                        }
 
                         const switchedOn = this.statusPattern.test(body);
                         if (this.debug)
@@ -442,7 +446,7 @@ HTTP_SWITCH.prototype = {
                         error: result.error
                     });
                 }
-                else if (!http.isHttpSuccessCode(result.response.statusCode)) {
+                else if (!(http.isHttpSuccessCode(result.response.statusCode) || http.isHttpRedirectCode(result.response.statusCode))) {
                     errors.push({
                         index: i,
                         error: new Error(`HTTP request returned with error code ${result.response.statusCode}`),
@@ -450,6 +454,10 @@ HTTP_SWITCH.prototype = {
                     });
                 }
                 else {
+                    if (http.isHttpRedirectCode(result.response.statusCode)) {
+                        this.log("setStatus() http request return with redirect status code (3xx). Accepting it anyways");
+                    }
+
                     successes.push({
                         index: i,
                         value: result.body
