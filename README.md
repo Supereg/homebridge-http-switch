@@ -1,5 +1,11 @@
-
 # homebridge-http-switch Plugin
+
+[![npm](https://img.shields.io/npm/v/homebridge-http-switch?style=for-the-badge)](https://www.npmjs.com/package/homebridge-http-switch)
+[![npm](https://img.shields.io/npm/dt/homebridge-http-switch?style=for-the-badge)](https://www.npmjs.com/package/homebridge-http-switch)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Supereg/homebridge-http-switch/Node-CI?style=for-the-badge)](https://github.com/Supereg/homebridge-http-switch/actions?query=workflow%3A%22Node-CI%22)
+[![GitHub issues](https://img.shields.io/github/issues/Supereg/homebridge-http-switch?style=for-the-badge)](https://github.com/Supereg/homebridge-http-switch/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/Supereg/homebridge-http-switch?style=for-the-badge)](https://github.com/Supereg/homebridge-http-switch/pulls)
+
 
 `homebridge-http-switch` is a [Homebridge](https://github.com/nfarina/homebridge) plugin with which you can configure 
 HomeKit switches which forward any requests to a defined http server. This comes in handy when you already have home 
