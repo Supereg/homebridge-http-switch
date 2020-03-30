@@ -1,0 +1,602 @@
+{
+  "pluginAlias": "HTTP-SWITCH",
+  "pluginType": "accessory",
+  "singular": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "description": "Defines the name which is later displayed in HomeKit.",
+        "type": "string",
+        "default": "HTTP Switch",
+        "required": true
+      },
+      "switchType": {
+        "title": "Switch Type",
+        "description": "Defines the type of the switch. 'stateful': A normal switch. 'stateless': A stateless switch remains in only one state. If you switch it, it immediately goes back to the default state. 'toggle': The toggle switch is a stateful switch however does not use the 'statusUrl' to determine the current state. It uses the last set state as the current state.",
+        "type": "string",
+        "default": "stateful",
+        "oneOf": [
+          {
+            "title": "Stateful",
+            "enum": ["stateful"]
+          },
+          {
+            "title": "Stateless (Default state OFF)",
+            "enum": ["stateless"]
+          },
+          {
+            "title": "Stateless (Default state ON)",
+            "enum": ["stateless-reverse"]
+          },
+          {
+            "title": "Toggle Switch (Default state OFF)",
+            "enum": ["toggle"]
+          },
+          {
+            "title": "Toggle Switch (Default state ON)",
+            "enum": ["toggle-reverse"]
+          }
+        ],
+        "required": true
+      },
+
+      "onUrl": {
+        "title": "On-URL",
+        "description": "Defines the url which is called when the switch is turned on",
+        "type": "array",
+        "items": {
+          "title": "URL Configuration",
+          "type": "object",
+          "properties": {
+            "url": {
+              "title": "URL",
+              "type": "string",
+              "format": "uri",
+              "required": true
+            },
+            "method": {
+              "title": "Method",
+              "description": "Defines the http method used to make the http request",
+              "type": "string",
+              "default": "GET",
+              "oneOf": [
+                {
+                  "title": "GET",
+                  "enum": ["GET"]
+                },
+                {
+                  "title": "POST",
+                  "enum": ["POST"]
+                },
+                {
+                  "title": "HEAD",
+                  "enum": ["HEAD"]
+                },
+                {
+                  "title": "PUT",
+                  "enum": ["PUT"]
+                },
+                {
+                  "title": "DELETE",
+                  "enum": ["DELETE"]
+                },
+                {
+                  "title": "CONNECT",
+                  "enum": ["CONNECT"]
+                },
+                {
+                  "title": "OPTIONS",
+                  "enum": ["OPTIONS"]
+                },
+                {
+                  "title": "TRACE",
+                  "enum": ["TRACE"]
+                },
+                {
+                  "title": "PATCH",
+                  "enum": ["PATCH"]
+                }
+              ],
+              "required": true
+            },
+            "body": {
+              "title": "Body",
+              "description": "Defines the body sent with the http request.",
+              "type": "string"
+            },
+            "strictSSL": {
+              "title": "Strict SSL",
+              "description": "If enabled the SSL certificate used must be valid and the whole certificate chain must be trusted. The default is false because most people will work with self signed certificates in their homes and their devices are already authorized since being in their networks.",
+              "type": "boolean",
+              "default": false
+            },
+            "auth": {
+              "title": "Authentication",
+              "type": "object",
+              "properties": {
+                "username": {
+                  "title": "Username",
+                  "type": "string",
+                  "required": true
+                },
+                "password": {
+                  "title": "Password",
+                  "type": "string",
+                  "required": true
+                },
+                "sendImmediately": {
+                  "title": "Send credentials immediately",
+                  "description": "When checked the plugin will send the credentials immediately to the http server. This is best practice for basic authentication. When not checked the plugin will send the proper authentication header after receiving an 401 error code (unauthenticated). The response must include a proper `WWW-Authenticate` header. Digest authentication requires this property to be not checked!",
+                  "type": "boolean",
+                  "default": true
+                }
+              },
+              "condition": {
+                "functionBody": "return !(model.auth && model.auth.username && model.auth.password)"
+              },
+              "required": false
+            },
+            "headers": {
+              "title": "Headers",
+              "description": "Using this object you can define any http headers which are sent with the http request.",
+              "type": "array",
+              "items": {
+                "title": "Header",
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "title": "Key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "title": "Value",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "requestTimeout": {
+              "title": "Request Timeout",
+              "description": "Time in milliseconds specifying timeout (Time to wait for http response and also setting socket timeout).",
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 1,
+              "default": 20000
+            },
+            "repeat": {
+              "title": "Repeat Execution",
+              "description": "Defines how often the execution of this url should be repeated. Notice that this property only has an effect on URLs specified in 'On-URL' or 'Off-URL'. Also have a look at the 'multipleUrlExecutionStrategy' property. Using \"Parallel\" execution could result in unpredictable behaviour.",
+              "type": "number",
+              "minimum": 1,
+              "multipleOf": 1,
+              "default": 1
+            },
+            "delayBeforeExecution": {
+              "title": "Delay before execution",
+              "description": "Defines the time in milliseconds to wait before executing the url. Notice that this property only has an effect on urls specified in 'On-URL' or 'Off-URL'. Also have a look at the 'multipleUrlExecutionStrategy' property.",
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 1,
+              "default": 0
+            }
+          }
+        },
+        "condition": {
+          "functionBody": "return model.switchType && (model.switchType === 'stateful' || model.switchType === 'stateless' || model.switchType === 'toggle' || model.switchType === 'toggle-reverse')"
+        },
+        "minItems": 1,
+        "required": true
+      },
+      "offUrl": {
+        "title": "Off-URL",
+        "description": "Defines the url which is called when the switch is turned off",
+        "type": "array",
+        "items": {
+          "title": "URL Configuration",
+          "type": "object",
+          "properties": {
+            "url": {
+              "title": "URL",
+              "type": "string",
+              "format": "uri",
+              "required": true
+            },
+            "method": {
+              "title": "Method",
+              "description": "Defines the http method used to make the http request",
+              "type": "string",
+              "default": "GET",
+              "oneOf": [
+                {
+                  "title": "GET",
+                  "enum": ["GET"]
+                },
+                {
+                  "title": "POST",
+                  "enum": ["POST"]
+                },
+                {
+                  "title": "HEAD",
+                  "enum": ["HEAD"]
+                },
+                {
+                  "title": "PUT",
+                  "enum": ["PUT"]
+                },
+                {
+                  "title": "DELETE",
+                  "enum": ["DELETE"]
+                },
+                {
+                  "title": "CONNECT",
+                  "enum": ["CONNECT"]
+                },
+                {
+                  "title": "OPTIONS",
+                  "enum": ["OPTIONS"]
+                },
+                {
+                  "title": "TRACE",
+                  "enum": ["TRACE"]
+                },
+                {
+                  "title": "PATCH",
+                  "enum": ["PATCH"]
+                }
+              ],
+              "required": true
+            },
+            "body": {
+              "title": "Body",
+              "description": "Defines the body sent with the http request.",
+              "type": "string"
+            },
+            "strictSSL": {
+              "title": "Strict SSL",
+              "description": "If enabled the SSL certificate used must be valid and the whole certificate chain must be trusted. The default is false because most people will work with self signed certificates in their homes and their devices are already authorized since being in their networks.",
+              "type": "boolean",
+              "default": false
+            },
+            "auth": {
+              "title": "Authentication",
+              "type": "object",
+              "properties": {
+                "username": {
+                  "title": "Username",
+                  "type": "string",
+                  "required": true
+                },
+                "password": {
+                  "title": "Password",
+                  "type": "string",
+                  "required": true
+                },
+                "sendImmediately": {
+                  "title": "Send credentials immediately",
+                  "description": "When checked the plugin will send the credentials immediately to the http server. This is best practice for basic authentication. When not checked the plugin will send the proper authentication header after receiving an 401 error code (unauthenticated). The response must include a proper `WWW-Authenticate` header. Digest authentication requires this property to be not checked!",
+                  "type": "boolean",
+                  "default": true
+                }
+              },
+              "condition": {
+                "functionBody": "return !(model.auth && model.auth.username && model.auth.password)"
+              },
+              "required": false
+            },
+            "headers": {
+              "title": "Headers",
+              "description": "Using this object you can define any http headers which are sent with the http request.",
+              "type": "array",
+              "items": {
+                "title": "Header",
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "title": "Key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "title": "Value",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "requestTimeout": {
+              "title": "Request Timeout",
+              "description": "Time in milliseconds specifying timeout (Time to wait for http response and also setting socket timeout).",
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 1,
+              "default": 20000
+            },
+            "repeat": {
+              "title": "Repeat Execution",
+              "description": "Defines how often the execution of this url should be repeated. Also have a look at the 'multipleUrlExecutionStrategy' property. Using \"Parallel\" execution could result in unpredictable behaviour.",
+              "type": "number",
+              "minimum": 1,
+              "multipleOf": 1,
+              "default": 1
+            },
+            "delayBeforeExecution": {
+              "title": "Delay before execution",
+              "description": "Defines the time in milliseconds to wait before executing the url. Also have a look at the 'multipleUrlExecutionStrategy' property.",
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 1,
+              "default": 0
+            }
+          }
+        },
+        "condition": {
+          "functionBody": "return model.switchType && (model.switchType === 'stateful' || model.switchType === 'stateless-reverse' || model.switchType === 'toggle' || model.switchType === 'toggle-reverse')"
+        },
+        "minItems": 1,
+        "required": true
+      },
+      "statusUrl": {
+        "title": "Status-URL",
+        "description": "Defines the url to query the current state of the switch",
+        "type": "array",
+        "items": {
+          "title": "URL Configuration",
+          "type": "object",
+          "properties": {
+            "url": {
+              "title": "URL",
+              "type": "string",
+              "format": "uri",
+              "required": true
+            },
+            "method": {
+              "title": "Method",
+              "description": "Defines the http method used to make the http request",
+              "type": "string",
+              "default": "GET",
+              "oneOf": [
+                {
+                  "title": "GET",
+                  "enum": ["GET"]
+                },
+                {
+                  "title": "POST",
+                  "enum": ["POST"]
+                },
+                {
+                  "title": "HEAD",
+                  "enum": ["HEAD"]
+                },
+                {
+                  "title": "PUT",
+                  "enum": ["PUT"]
+                },
+                {
+                  "title": "DELETE",
+                  "enum": ["DELETE"]
+                },
+                {
+                  "title": "CONNECT",
+                  "enum": ["CONNECT"]
+                },
+                {
+                  "title": "OPTIONS",
+                  "enum": ["OPTIONS"]
+                },
+                {
+                  "title": "TRACE",
+                  "enum": ["TRACE"]
+                },
+                {
+                  "title": "PATCH",
+                  "enum": ["PATCH"]
+                }
+              ],
+              "required": true
+            },
+            "body": {
+              "title": "Body",
+              "description": "Defines the body sent with the http request.",
+              "type": "string"
+            },
+            "strictSSL": {
+              "title": "Strict SSL",
+              "description": "If enabled the SSL certificate used must be valid and the whole certificate chain must be trusted. The default is false because most people will work with self signed certificates in their homes and their devices are already authorized since being in their networks.",
+              "type": "boolean",
+              "default": false
+            },
+            "auth": {
+              "title": "Authentication",
+              "type": "object",
+              "properties": {
+                "username": {
+                  "title": "Username",
+                  "type": "string",
+                  "required": true
+                },
+                "password": {
+                  "title": "Password",
+                  "type": "string",
+                  "required": true
+                },
+                "sendImmediately": {
+                  "title": "Send credentials immediately",
+                  "description": "When checked the plugin will send the credentials immediately to the http server. This is best practice for basic authentication. When not checked the plugin will send the proper authentication header after receiving an 401 error code (unauthenticated). The response must include a proper `WWW-Authenticate` header. Digest authentication requires this property to be not checked!",
+                  "type": "boolean",
+                  "default": true
+                }
+              },
+              "condition": {
+                "functionBody": "return !(model.auth && model.auth.username && model.auth.password)"
+              },
+              "required": false
+            },
+            "headers": {
+              "title": "Headers",
+              "description": "Using this object you can define any http headers which are sent with the http request.",
+              "type": "array",
+              "items": {
+                "title": "Header",
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "title": "Key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "title": "Value",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "requestTimeout": {
+              "title": "Request Timeout",
+              "description": "Time in milliseconds specifying timeout (Time to wait for http response and also setting socket timeout).",
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 1,
+              "default": 20000
+            }
+          }
+        },
+        "condition": {
+          "functionBody": "return model.switchType && model.switchType === 'stateful'"
+        },
+        "minItems": 1,
+        "required": true
+      },
+
+      "statusPattern": {
+        "title": "Status Pattern",
+        "description": "Defines a regex pattern which is compared to the body of the 'statusUrl'. When the pattern matches, the state of the switch is set to ON, otherwise OFF",
+        "type": "string",
+        "default": "1",
+        "condition": {
+          "functionBody": "return model.switchType && model.switchType === 'stateful'"
+        },
+        "required": false
+      },
+      "statusCache": {
+        "title": "Status Cache",
+        "description": "Defines the amount of time in milliseconds a queried state is cached before a new http request is made to the http device. A value of 0 indicates no caching. A value of -1 will result in infinite caching!",
+        "type": "number",
+        "default": 0,
+        "minimum": -1,
+        "multipleOf": 1,
+        "condition": {
+          "functionBody": "return model.switchType && model.switchType === 'stateful'"
+        }
+      },
+
+      "auth": {
+        "title": "Authentication",
+        "description": "If your http server requires authentication you can specify your credential here. It uses those credentials for all http requests and thus overrides all possibly specified credentials inside 'onUrl', 'offUrl' and 'statusUrl'. Remove credentials here to let the Authentication configuration reappear in 'onUrl', 'offUrl' and 'statusUrl'",
+        "type": "object",
+        "properties": {
+          "username": {
+            "title": "Username",
+            "type": "string",
+            "required": true
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "required": true
+          },
+          "sendImmediately": {
+            "title": "Send credentials immediately",
+            "description": "When checked the plugin will send the credentials immediately to the http server. This is best practice for basic authentication. When not checked the plugin will send the proper authentication header after receiving an 401 error code (unauthenticated). The response must include a proper `WWW-Authenticate` header. Digest authentication requires this property to be not checked!",
+            "type": "boolean"
+          }
+        },
+        "required": false
+      },
+
+      "timeout": {
+        "title": "Switch Timeout",
+        "description": "When using a stateless switch this timeout in milliseconds specifies the time after which the switch is reset back to its original state.",
+        "type": "number",
+        "default": 1000,
+        "minimum": 0,
+        "multipleOf": 1
+      },
+      "pullInterval": {
+        "title": "Pull Interval",
+        "description": "Specifies an interval in milliseconds in which the plugin pulls the current state from your http device.",
+        "type": "number",
+        "minimum": 100,
+        "multipleOf": 1
+      },
+      "multipleUrlExecutionStrategy": {
+        "title": "Execution Strategy for multiple URLs",
+        "type": "string",
+        "default": "parallel",
+        "oneOf": [
+          {
+            "title": "Parallel",
+            "enum": ["parallel"]
+          },
+          {
+            "title": "Series",
+            "enum": ["series"]
+          }
+        ]
+      },
+
+      "mqtt": {
+        "title": "MQTT",
+        "description": "Configuration to setup a mqtt connection! MQTT is only used to dynamically update the current state of the switch and not to send any commands.",
+        "type": "object",
+        "properties": {
+          "host": {
+            "title": "Hostname",
+            "description": "Defines the host of the mqtt broker.",
+            "type": "string",
+            "format": "hostname",
+            "required": true
+          },
+          "port": {
+            "title": "Port",
+            "description": "Defines the port of the mqtt broker.",
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 1,
+            "default": 1883
+          },
+          "credentials": {
+            "title": "Credentials",
+            "description": "Defines the credentials used to authenticate with the mqtt broker.",
+            "type": "object",
+            "properties": {
+              "username": {
+                "title": "Username",
+                "type": "string",
+                "required": true
+              },
+              "password": {
+                "title": "Password",
+                "type": "string",
+                "required": false
+              }
+            }
+          }
+        },
+        "required": false
+      },
+
+      "debug": {
+        "title": "Debug mode",
+        "type": "boolean",
+        "default": false
+      }
+    }
+  }
+}
