@@ -380,7 +380,8 @@ HTTP_SWITCH.prototype = {
             case SwitchType.STATELESS_REVERSE:
                 callback(null, true);
                 break;
-            case SwitchType.TOGGLE || SwitchType.TOGGLE_REVERSE:
+            case SwitchType.TOGGLE:
+            case SwitchType.TOGGLE_REVERSE:
                 callback(null, this.toggleSwitchState);
                 break;
 
@@ -414,7 +415,8 @@ HTTP_SWITCH.prototype = {
 
                 this._makeSetRequest(false, callback);
                 break;
-            case SwitchType.TOGGLE || SwitchType.TOGGLE_REVERSE:
+            case SwitchType.TOGGLE:
+            case SwitchType.TOGGLE_REVERSE:
                 this._makeSetRequest(on, error => {
                     if (!error)
                         this.toggleSwitchState = on;
