@@ -90,6 +90,13 @@ You can change this using `statusPattern` option.
 
 #### Advanced configuration options:
 
+* `initStatusUrl` \<string | [urlObject](#urlobject)\> **optional**: Defines the url 
+(and other properties when using an urlObject) to query before the state is checked and if initStatusPattern is matched initUrl will be called. Only used if specified.  
+You can change this using `initStatusPattern` option.  
+- `initStatusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `initStatusUrl`.
+When matching the the `initUrl` will be called before statusUrl is asked.
+* `initUrl` \<string | [urlObject](#urlobject)\> **optional**: Defines the url 
+(and other properties when using an urlObject) to query if  `initStatusUrl` matches `initStatusPattern`. Per default this is empty.
 - `statusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `statusUrl`.
 When matching the status of the switch is set to ON otherwise OFF. [Some examples](#examples-for-custom-statuspatterns).
 - `statusCache` \<number\> **optional** \(Default: **0**\): Defines the amount of time in milliseconds a queried state 

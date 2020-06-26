@@ -34,6 +34,9 @@ function HTTP_SWITCH(log, config) {
     this.log = log;
     this.name = config.name;
     this.debug = config.debug || false;
+    this.initStatusUrl = undefined;
+    this.initStatusPattern = undefined;
+    this.initUrl = undefined;
 
     this.switchType = utils.enumValueOf(SwitchType, config.switchType, SwitchType.STATEFUL);
     if (!this.switchType) {
@@ -58,6 +61,14 @@ function HTTP_SWITCH(log, config) {
         this.statusCache = new Cache(config.statusCache, 0);
         if (config.statusCache && typeof config.statusCache !== "number")
             this.log.warn("Property 'statusCache' was given in an unsupported type. Using default one!");
+
+      this.initStatusPattern = /1/;
+      if (config.initStatusPattern) {
+        if (typeof config.initStatusPattern === "string")
+          this.initStatusPattern = new RegExp(config.initStatusPattern);
+        else
+          this.log.warn("Property 'initStatusPattern' was given in an unsupported type. Using default one!");
+      }
     }
 
     /** @namespace config.multipleUrlExecutionStrategy */
@@ -199,6 +210,12 @@ function HTTP_SWITCH(log, config) {
             this.log("  - offUrls: " + JSON.stringify(this.off));
         if (this.status)
             this.log("  - statusUrl: " + JSON.stringify(this.status));
+        if (this.initStatusUrl != undefined)
+          this.log("  - initStatusUrl: " + JSON.stringify(this.initStatusUrl));
+        if (this.initStatusPattern != undefined)
+          this.log("  - initStatusPattern: " + this.initStatusPattern);
+        if (this.initUrl != undefined)
+          this.log("  - initUrl: " + JSON.stringify(this.initUrl));
 
         if (this.switchType === SwitchType.STATELESS || this.switchType === SwitchType.STATELESS_REVERSE)
             this.log("  - timeout for stateless switch: " + this.timeout);
@@ -281,6 +298,23 @@ HTTP_SWITCH.prototype = {
                 this.log.warn(`Property 'statusUrl' is required when using switchType '${this.switchType}'`);
                 return false;
             }
+
+            if (config.initStatusUrl) {
+              try {
+                this.initStatusUrl = configParser.parseUrlProperty(config.initStatusUrl);
+              } catch (error) {
+                this.log.warn("Error occurred while parsing 'initStatusUrl': " + error.message);
+                return false;
+              }
+              if (config.initUrl) {
+                try {
+                  this.initUrl = configParser.parseUrlProperty(config.initUrl);
+                } catch (error) {
+                  this.log.warn("Error occurred while parsing 'initUrl': " + error.message);
+                  return false;
+                }
+              }
+            }
         }
         else if (config.statusUrl)
             this.log.warn(`Property 'statusUrl' is defined though it is not used with switchType ${this.switchType}. Ignoring it!`);
@@ -331,6 +365,34 @@ HTTP_SWITCH.prototype = {
         this.homebridgeService.getCharacteristic(characteristic).updateValue(value);
     },
 
+   queryStatus: function (callback) {
+     http.httpRequest(this.status, (error, response, body) => {
+                    if (error) {
+                    this.log("getStatus() failed: %s", error.message);
+                    callback(error);
+                    }
+                    else if (!(http.isHttpSuccessCode(response.statusCode) || http.isHttpRedirectCode(response.statusCode))) {
+                    this.log("getStatus() http request returned http error code: %s", response.statusCode);
+                    callback(new Error("Got html error code " + response.statusCode));
+                    }
+                    else {
+                    if (this.debug)
+                    this.log(`getStatus() request returned successfully (${response.statusCode}). Body: '${body}'`);
+
+                    if (http.isHttpRedirectCode(response.statusCode)) {
+                    this.log("getStatus() http request return with redirect status code (3xx). Accepting it anyways");
+                    }
+
+                    const switchedOn = this.statusPattern.test(body);
+                    if (this.debug)
+                    this.log("Switch is currently %s", switchedOn? "ON": "OFF");
+
+                    this.statusCache.queried(); // we only update lastQueried on successful query
+                    callback(null, switchedOn);
+                    }
+                    });
+   },
+
     getStatus: function (callback) {
         if (this.pullTimer)
             this.pullTimer.resetTimer();
@@ -348,31 +410,60 @@ HTTP_SWITCH.prototype = {
                 if (this.debug)
                     this.log("getStatus() doing http request...");
 
-                http.httpRequest(this.status, (error, response, body) => {
-                    if (error) {
-                        this.log("getStatus() failed: %s", error.message);
-                        callback(error);
-                    }
-                    else if (!(http.isHttpSuccessCode(response.statusCode) || http.isHttpRedirectCode(response.statusCode))) {
-                        this.log("getStatus() http request returned http error code: %s", response.statusCode);
-                        callback(new Error("Got html error code " + response.statusCode));
-                    }
-                    else {
-                        if (this.debug)
-                            this.log(`getStatus() request returned successfully (${response.statusCode}). Body: '${body}'`);
+                 if (this.initStatusUrl != undefined) {
+                     http.httpRequest(this.initStatusUrl, (error, response, body) => {
+                                      if (error) {
+                                        this.log("getStatus() initStatusUrl failed: %s", error.message);
+                                        callback(error);
+                                      }
+                                      else if (!(http.isHttpSuccessCode(response.statusCode) || http.isHttpRedirectCode(response.statusCode))) {
+                                        this.log("getStatus() http request returned http error code: %s", response.statusCode);
+                                        callback(new Error("Got html error code " + response.statusCode));
+                                      }
+                                      else {
+                                        if (this.debug)
+                                          this.log(`getStatus() initStatusUrl request returned successfully (${response.statusCode}). Body: '${body}'`);
 
-                        if (http.isHttpRedirectCode(response.statusCode)) {
-                            this.log("getStatus() http request return with redirect status code (3xx). Accepting it anyways");
-                        }
+                                        if (http.isHttpRedirectCode(response.statusCode)) {
+                                          this.log("getStatus() http request return with redirect status code (3xx). Accepting it anyways");
+                                        }
 
-                        const switchedOn = this.statusPattern.test(body);
-                        if (this.debug)
-                            this.log("Switch is currently %s", switchedOn? "ON": "OFF");
+                                        const needInit = this.initUrl != undefined && this.initStatusPattern.test(body);
+                                        if (this.debug)
+                                          this.log("Init is needed: %s", needInit ? "yes": "no");
 
-                        this.statusCache.queried(); // we only update lastQueried on successful query
-                        callback(null, switchedOn);
-                    }
-                });
+                                        if (needInit) {
+                                          http.httpRequest(this.initUrl, (error, response, body) => {
+                                                           if (error) {
+                                                             this.log("getStatus() initUrl failed: %s", error.message);
+                                                             callback(error);
+                                                           }
+                                                           else if (!(http.isHttpSuccessCode(response.statusCode) || http.isHttpRedirectCode(response.statusCode))) {
+                                                             this.log("getStatus() http request returned http error code: %s", response.statusCode);
+                                                             callback(new Error("Got html error code " + response.statusCode));
+                                                           }
+                                                           else {
+                                                             if (this.debug)
+                                                               this.log(`getStatus() initUrl request returned successfully (${response.statusCode}). Body: '${body}'`);
+
+                                                             if (http.isHttpRedirectCode(response.statusCode)) {
+                                                             this.log("getStatus() http request return with redirect status code (3xx). Accepting it anyways");
+                                                             }
+
+                                                             this.queryStatus(callback);
+                                                           }
+                                                           });
+
+                                        }
+                                        else {
+                                          this.queryStatus(callback);
+                                        }
+                                      }
+                                      });
+                 }
+                 else {
+                     this.queryStatus(callback);
+                 }
                 break;
             case SwitchType.STATELESS:
                 callback(null, false);
