@@ -90,6 +90,7 @@ You can change this using `statusPattern` option.
 
 #### Advanced configuration options:
 
+- `serialNumber` \<string\> **optional** \(Default: **"SW01"**\): Defines a custom serial number shown in the home app.
 - `statusPattern` \<string\> **optional** \(Default: **"1"**\): Defines a regex pattern which is compared to the body of the `statusUrl`.
 When matching the status of the switch is set to ON otherwise OFF. [Some examples](#examples-for-custom-statuspatterns).
 - `statusCache` \<number\> **optional** \(Default: **0**\): Defines the amount of time in milliseconds a queried state 

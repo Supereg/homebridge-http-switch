@@ -46,6 +46,10 @@ function HTTP_SWITCH(log, config) {
         this.timeout = 1000;
     }
 
+    if (config.serialNumber !== undefined && typeof config.serialNumber === "string") {
+        this.serialNumber = config.serialNumber;
+    }
+
     if (this.switchType === SwitchType.STATEFUL) {
         this.statusPattern = /1/;
         if (config.statusPattern) {
@@ -302,7 +306,7 @@ HTTP_SWITCH.prototype = {
         informationService
             .setCharacteristic(Characteristic.Manufacturer, "Andreas Bauer")
             .setCharacteristic(Characteristic.Model, "HTTP Switch")
-            .setCharacteristic(Characteristic.SerialNumber, "SW01")
+            .setCharacteristic(Characteristic.SerialNumber, this.serialNumber || "SW01")
             .setCharacteristic(Characteristic.FirmwareRevision, packageJSON.version);
 
         return [informationService, this.homebridgeService];
