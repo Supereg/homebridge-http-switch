@@ -21,9 +21,9 @@
     "homebridge": ">=0.4.8"
   },
   "dependencies": {
-    "homebridge-http-base": "~2.1.9"
+    "homebridge-http-base": "~2.1.10"
   },
   "devDependencies": {
-    "homebridge": "^1.1.1"
+    "homebridge": "^1.2.3"
   }
 }
