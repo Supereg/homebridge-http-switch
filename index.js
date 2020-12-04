@@ -72,13 +72,6 @@ function HTTP_SWITCH(log, config) {
             this.log.warn("'multipleUrlExecutionStrategy' has an invalid value (" + config.multipleUrlExecutionStrategy + "). Continuing with defaults!");
     }
 
-    if (this.switchType === SwitchType.TOGGLE) {
-        this.toggleSwitchState = false;
-    }
-    else if (this.switchType === SwitchType.TOGGLE_REVERSE) {
-        this.toggleSwitchState = true;
-    }
-
     const success = this.parseUrls(config); // parsing 'onUrl', 'offUrl', 'statusUrl'
     if (!success) {
         this.log.warn("Aborting...");
@@ -133,9 +126,13 @@ function HTTP_SWITCH(log, config) {
     }
 
     this.homebridgeService = new Service.Switch(this.name);
-    this.homebridgeService.getCharacteristic(Characteristic.On)
+    const onCharacteristic = this.homebridgeService.getCharacteristic(Characteristic.On)
         .on("get", this.getStatus.bind(this))
         .on("set", this.setStatus.bind(this));
+
+    if (this.switchType === SwitchType.TOGGLE_REVERSE) {
+        onCharacteristic.updateValue(true);
+    }
 
     if (this.switchType === SwitchType.STATELESS_REVERSE)
         this.homebridgeService.setCharacteristic(Characteristic.On, true);
@@ -386,7 +383,7 @@ HTTP_SWITCH.prototype = {
                 break;
             case SwitchType.TOGGLE:
             case SwitchType.TOGGLE_REVERSE:
-                callback(null, this.toggleSwitchState);
+                callback(null, this.homebridgeService.getCharacteristic(Characteristic.On).value);
                 break;
 
             default:
@@ -421,12 +418,7 @@ HTTP_SWITCH.prototype = {
                 break;
             case SwitchType.TOGGLE:
             case SwitchType.TOGGLE_REVERSE:
-                this._makeSetRequest(on, error => {
-                    if (!error)
-                        this.toggleSwitchState = on;
-
-                    callback(error);
-                });
+                this._makeSetRequest(on, callback);
                 break;
 
             default:
