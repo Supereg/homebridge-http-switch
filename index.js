@@ -130,12 +130,13 @@ function HTTP_SWITCH(log, config) {
         .on("get", this.getStatus.bind(this))
         .on("set", this.setStatus.bind(this));
 
-    if (this.switchType === SwitchType.TOGGLE_REVERSE) {
-        onCharacteristic.updateValue(true);
-    }
 
-    if (this.switchType === SwitchType.STATELESS_REVERSE)
-        this.homebridgeService.setCharacteristic(Characteristic.On, true);
+    switch (this.switchType) {
+        case SwitchType.TOGGLE_REVERSE:
+        case SwitchType.STATELESS_REVERSE:
+            onCharacteristic.updateValue(true);
+            break;
+    }
 
     /** @namespace config.pullInterval */
     if (config.pullInterval) {
