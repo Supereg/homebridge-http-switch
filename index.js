@@ -41,7 +41,7 @@ function HTTP_SWITCH(log, config) {
         return;
     }
 
-    this.timeout = config.timeout ?? 1000;
+    this.timeout = config.timeout;
     if (typeof this.timeout !== 'number') {
         this.timeout = 1000;
     }
