@@ -273,7 +273,7 @@ Below is an example of an mqttObject containing the basic properties for a switc
 ```json
 {
   "host": "127.0.0.1",
-  "port": "1883",
+  "port": 1883,
   
   "credentials": {
     "username": "yourUsername",
