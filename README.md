@@ -419,8 +419,6 @@ could specify the following pattern:
 }
 ```
 
-<br>
-
 However using Regular Expressions much more complex patterns are possible. Let's assume your http enabled device responds 
 with the following json string as body, where one property has an random value an the other indicates the status of the 
 switch:
