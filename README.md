@@ -436,6 +436,16 @@ Then you could use the following pattern:
     "statusPattern": "{\n    \"perRequestRandomValue\": [0-9]+,\n    \"switchState\": true\n}"
 }
 ```
+**Note:** The `statusPattern` must be placed on the same level as the `statusUrl` property, not inside the `statusUrl` object. See below for example.
+
+```json
+{
+    "statusUrl": {
+     },
+    "statusPattern": "....",
+}
+```
+
 More on how to build regex patterns: https://www.w3schools.com/jsref/jsref_obj_regexp.asp
 
 ## Notification Server
